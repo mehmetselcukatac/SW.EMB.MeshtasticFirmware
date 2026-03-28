@@ -20,6 +20,8 @@
 // #define EVENT_NODEDB_UPDATED 8     // Now defunct: NodeDB has a big enough change that we think you should turn on the screen
 #define EVENT_CONTACT_FROM_PHONE 9 // the phone just talked to us over bluetooth
 #define EVENT_LOW_BATTERY 10       // Battery is critically low, go to sleep
+#define EVENT_LOW_BATTERY_SENSOR 18 // Battery low for SENSOR/CLIENT_MUTE roles
+#define EVENT_LOW_BATTERY_CLIENT 19 // Battery low for CLIENT role
 #define EVENT_SERIAL_CONNECTED 11
 #define EVENT_SERIAL_DISCONNECTED 12
 #define EVENT_POWER_CONNECTED 13

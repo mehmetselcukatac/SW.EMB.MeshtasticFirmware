@@ -178,9 +178,11 @@ void initDeepSleep()
 
 bool doPreflightSleep()
 {
-    if (preflightSleep.notifyObservers(NULL) != 0)
+    if (preflightSleep.notifyObservers(NULL) != 0) {
+        LOG_DEBUG("Sleep vetoed by observer");
         return false; // vetoed
-    else
+    } else
+        LOG_DEBUG("Sleep confirmed by observers");
         return true;
 }
 

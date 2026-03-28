@@ -603,6 +603,8 @@ Power::Power() : OSThread("Power")
 {
     statusHandler = {};
     low_voltage_counter = 0;
+    low_voltage_counter_sensor = 0;
+    low_voltage_counter_client = 0;
 #ifdef DEBUG_HEAP
     lastheap = memGet.getFreeHeap();
 #endif
@@ -739,6 +741,8 @@ bool Power::setup()
 #endif
     enabled = found;
     low_voltage_counter = 0;
+    low_voltage_counter_sensor = 0;
+    low_voltage_counter_client = 0;
 
     return found;
 }
@@ -952,15 +956,59 @@ void Power::readPowerStatus()
     //
 
     if (batteryLevel && powerStatus2.getHasBattery() && !powerStatus2.getHasUSB()) {
-        if (batteryLevel->getBattVoltage() < OCV[NUM_OCV_POINTS - 1]) {
-            low_voltage_counter++;
-            LOG_DEBUG("Low voltage counter: %d/10", low_voltage_counter);
-            if (low_voltage_counter > 10) {
-                LOG_INFO("Low voltage detected, trigger deep sleep");
-                powerFSM.trigger(EVENT_LOW_BATTERY);
+        // ROUTER role: use default low battery threshold (3100 mV)
+        if (config.device.role == meshtastic_Config_DeviceConfig_Role_ROUTER ||
+            config.device.role == meshtastic_Config_DeviceConfig_Role_ROUTER_CLIENT) {
+            if (batteryLevel->getBattVoltage() < OCV[NUM_OCV_POINTS - 1]) {
+                low_voltage_counter++;
+                LOG_DEBUG("Low voltage counter (ROUTER): %d/10", low_voltage_counter);
+                if (low_voltage_counter > 5) {
+                    LOG_INFO("Low voltage detected for ROUTER, trigger deep sleep");
+                    powerFSM.trigger(EVENT_LOW_BATTERY);
+                }
+            } else {
+                low_voltage_counter = 0;
             }
-        } else {
-            low_voltage_counter = 0;
+        }
+        // SENSOR and CLIENT_MUTE roles: use OCV[1] threshold (4050 mV)
+        else if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR ||
+                 config.device.role == meshtastic_Config_DeviceConfig_Role_CLIENT_MUTE) {
+            if (batteryLevel->getBattVoltage() < OCV[1]) {
+                low_voltage_counter_sensor++;
+                LOG_DEBUG("Low voltage counter (SENSOR/CLIENT_MUTE): %d/10", low_voltage_counter_sensor);
+                if (low_voltage_counter_sensor > 1) {
+                    LOG_INFO("Low voltage detected for SENSOR/CLIENT_MUTE, trigger deep sleep");
+                    powerFSM.trigger(EVENT_LOW_BATTERY_SENSOR);
+                }
+            } else {
+                low_voltage_counter_sensor = 0;
+            }
+        }
+        // CLIENT role: use OCV[6] threshold (3630 mV)
+        else if (config.device.role == meshtastic_Config_DeviceConfig_Role_CLIENT) {
+            if (batteryLevel->getBattVoltage() < OCV[6]) {
+                low_voltage_counter_client++;
+                LOG_DEBUG("Low voltage counter (CLIENT): %d/10", low_voltage_counter_client);
+                if (low_voltage_counter_client > 10) {
+                    LOG_INFO("Low voltage detected for CLIENT, trigger deep sleep");
+                    powerFSM.trigger(EVENT_LOW_BATTERY_CLIENT);
+                }
+            } else {
+                low_voltage_counter_client = 0;
+            }
+        }
+        // Other roles: use default threshold
+        else {
+            if (batteryLevel->getBattVoltage() < OCV[NUM_OCV_POINTS - 1]) {
+                low_voltage_counter++;
+                LOG_DEBUG("Low voltage counter (OTHER): %d/10", low_voltage_counter);
+                if (low_voltage_counter > 10) {
+                    LOG_INFO("Low voltage detected for OTHER role, trigger deep sleep");
+                    powerFSM.trigger(EVENT_LOW_BATTERY);
+                }
+            } else {
+                low_voltage_counter = 0;
+            }
         }
     }
 }

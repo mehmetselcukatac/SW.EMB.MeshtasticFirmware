@@ -305,6 +305,22 @@ void PowerFSM_setup()
     powerFSM.add_transition(&stateON, &stateLowBattSDS, EVENT_LOW_BATTERY, NULL, "LowBat");
     powerFSM.add_transition(&stateSERIAL, &stateLowBattSDS, EVENT_LOW_BATTERY, NULL, "LowBat");
 
+    // Handle low battery for SENSOR/CLIENT_MUTE roles
+    powerFSM.add_transition(&stateBOOT, &stateLowBattSDS, EVENT_LOW_BATTERY_SENSOR, NULL, "LowBatSensor");
+    powerFSM.add_transition(&stateLS, &stateLowBattSDS, EVENT_LOW_BATTERY_SENSOR, NULL, "LowBatSensor");
+    powerFSM.add_transition(&stateNB, &stateLowBattSDS, EVENT_LOW_BATTERY_SENSOR, NULL, "LowBatSensor");
+    powerFSM.add_transition(&stateDARK, &stateLowBattSDS, EVENT_LOW_BATTERY_SENSOR, NULL, "LowBatSensor");
+    powerFSM.add_transition(&stateON, &stateLowBattSDS, EVENT_LOW_BATTERY_SENSOR, NULL, "LowBatSensor");
+    powerFSM.add_transition(&stateSERIAL, &stateLowBattSDS, EVENT_LOW_BATTERY_SENSOR, NULL, "LowBatSensor");
+
+    // Handle low battery for CLIENT role
+    powerFSM.add_transition(&stateBOOT, &stateLowBattSDS, EVENT_LOW_BATTERY_CLIENT, NULL, "LowBatClient");
+    powerFSM.add_transition(&stateLS, &stateLowBattSDS, EVENT_LOW_BATTERY_CLIENT, NULL, "LowBatClient");
+    powerFSM.add_transition(&stateNB, &stateLowBattSDS, EVENT_LOW_BATTERY_CLIENT, NULL, "LowBatClient");
+    powerFSM.add_transition(&stateDARK, &stateLowBattSDS, EVENT_LOW_BATTERY_CLIENT, NULL, "LowBatClient");
+    powerFSM.add_transition(&stateON, &stateLowBattSDS, EVENT_LOW_BATTERY_CLIENT, NULL, "LowBatClient");
+    powerFSM.add_transition(&stateSERIAL, &stateLowBattSDS, EVENT_LOW_BATTERY_CLIENT, NULL, "LowBatClient");
+
     // Handle being told to power off
     powerFSM.add_transition(&stateBOOT, &stateSHUTDOWN, EVENT_SHUTDOWN, NULL, "Shutdown");
     powerFSM.add_transition(&stateLS, &stateSHUTDOWN, EVENT_SHUTDOWN, NULL, "Shutdown");
