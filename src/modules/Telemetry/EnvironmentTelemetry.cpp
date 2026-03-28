@@ -139,6 +139,7 @@ extern void drawCommonHeader(OLEDDisplay *display, int16_t x, int16_t y, const c
 #include "Sensor/BH1750Sensor.h"
 #endif
 
+#if !MESHTASTIC_EXCLUDE_AIR_QUALITY_SENSOR
 #define FAILED_STATE_SENSOR_READ_MULTIPLIER 10
 #define DISPLAY_RECEIVEID_MEASUREMENTS_ON_SCREEN true
 
@@ -246,6 +247,9 @@ void EnvironmentTelemetryModule::i2cScanFinished(ScanI2C *i2cScanner)
     addSensor<BH1750Sensor>(i2cScanner, ScanI2C::DeviceType::BH1750);
 #endif
 
+#if !MESHTASTIC_EXCLUDE_AIR_QUALITY_SENSOR
+    // If AirQuality telemetry is active, that module owns SEN5X to avoid duplicate access.
+    if (!moduleConfig.telemetry.air_quality_enabled && !AIR_QUALITY_TELEMETRY_MODULE_ENABLE) {
 #endif
 }
 

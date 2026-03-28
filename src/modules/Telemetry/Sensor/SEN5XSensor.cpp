@@ -839,6 +839,26 @@ bool SEN5XSensor::getMetrics(meshtastic_Telemetry *measurement)
     response = getMeasurements();
 
     if (response == 0) {
+        if (measurement->which_variant == meshtastic_Telemetry_environment_metrics_tag) {
+            if (model != SEN50) {
+                if (sen5xmeasurement.humidity != FLT_MAX) {
+                    measurement->variant.environment_metrics.has_relative_humidity = true;
+                    measurement->variant.environment_metrics.relative_humidity = sen5xmeasurement.humidity;
+                }
+                if (sen5xmeasurement.temperature != FLT_MAX) {
+                    measurement->variant.environment_metrics.has_temperature = true;
+                    measurement->variant.environment_metrics.temperature = sen5xmeasurement.temperature;
+                }
+                if (sen5xmeasurement.vocIndex != FLT_MAX) {
+                    measurement->variant.environment_metrics.has_gas_resistance = true;
+                    measurement->variant.environment_metrics.gas_resistance = sen5xmeasurement.vocIndex;
+                }
+                return true;
+            }
+
+            return false;
+        }
+
         if (sen5xmeasurement.pM1p0 != UINT16_MAX) {
             measurement->variant.air_quality_metrics.has_pm10_standard = true;
             measurement->variant.air_quality_metrics.pm10_standard = sen5xmeasurement.pM1p0;
@@ -889,7 +909,7 @@ bool SEN5XSensor::getMetrics(meshtastic_Telemetry *measurement)
                 measurement->variant.air_quality_metrics.has_pm_temperature = true;
                 measurement->variant.air_quality_metrics.pm_temperature = sen5xmeasurement.temperature;
             }
-            if (sen5xmeasurement.noxIndex != FLT_MAX) {
+            if (sen5xmeasurement.vocIndex != FLT_MAX) {
                 measurement->variant.air_quality_metrics.has_pm_voc_idx = true;
                 measurement->variant.air_quality_metrics.pm_voc_idx = sen5xmeasurement.vocIndex;
             }
