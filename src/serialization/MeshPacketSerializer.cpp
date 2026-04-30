@@ -146,8 +146,66 @@ std::string MeshPacketSerializer::JsonSerialize(const meshtastic_MeshPacket *mp,
                     if (decoded->variant.air_quality_metrics.has_pm25_standard) {
                         msgPayload["pm25"] = new JSONValue((unsigned int)decoded->variant.air_quality_metrics.pm25_standard);
                     }
+                    if (decoded->variant.air_quality_metrics.has_pm40_standard) {
+                        msgPayload["pm40"] = new JSONValue((unsigned int)decoded->variant.air_quality_metrics.pm40_standard);
+                    }
                     if (decoded->variant.air_quality_metrics.has_pm100_standard) {
                         msgPayload["pm100"] = new JSONValue((unsigned int)decoded->variant.air_quality_metrics.pm100_standard);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_pm10_environmental) {
+                        msgPayload["pm10_environmental"] =
+                            new JSONValue((unsigned int)decoded->variant.air_quality_metrics.pm10_environmental);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_pm25_environmental) {
+                        msgPayload["pm25_environmental"] =
+                            new JSONValue((unsigned int)decoded->variant.air_quality_metrics.pm25_environmental);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_pm100_environmental) {
+                        msgPayload["pm100_environmental"] =
+                            new JSONValue((unsigned int)decoded->variant.air_quality_metrics.pm100_environmental);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_particles_03um) {
+                        msgPayload["particles_03um"] =
+                            new JSONValue((unsigned int)decoded->variant.air_quality_metrics.particles_03um);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_particles_05um) {
+                        msgPayload["particles_05um"] =
+                            new JSONValue((unsigned int)decoded->variant.air_quality_metrics.particles_05um);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_particles_10um) {
+                        msgPayload["particles_10um"] =
+                            new JSONValue((unsigned int)decoded->variant.air_quality_metrics.particles_10um);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_particles_25um) {
+                        msgPayload["particles_25um"] =
+                            new JSONValue((unsigned int)decoded->variant.air_quality_metrics.particles_25um);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_particles_40um) {
+                        msgPayload["particles_40um"] =
+                            new JSONValue((unsigned int)decoded->variant.air_quality_metrics.particles_40um);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_particles_50um) {
+                        msgPayload["particles_50um"] =
+                            new JSONValue((unsigned int)decoded->variant.air_quality_metrics.particles_50um);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_particles_100um) {
+                        msgPayload["particles_100um"] =
+                            new JSONValue((unsigned int)decoded->variant.air_quality_metrics.particles_100um);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_particles_tps) {
+                        msgPayload["particles_tps"] = new JSONValue(decoded->variant.air_quality_metrics.particles_tps);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_pm_temperature) {
+                        msgPayload["pm_temperature"] = new JSONValue(decoded->variant.air_quality_metrics.pm_temperature);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_pm_humidity) {
+                        msgPayload["pm_humidity"] = new JSONValue(decoded->variant.air_quality_metrics.pm_humidity);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_pm_voc_idx) {
+                        msgPayload["pm_voc_idx"] = new JSONValue(decoded->variant.air_quality_metrics.pm_voc_idx);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_pm_nox_idx) {
+                        msgPayload["pm_nox_idx"] = new JSONValue(decoded->variant.air_quality_metrics.pm_nox_idx);
                     }
                     if (decoded->variant.air_quality_metrics.has_co2) {
                         msgPayload["co2"] = new JSONValue((unsigned int)decoded->variant.air_quality_metrics.co2);

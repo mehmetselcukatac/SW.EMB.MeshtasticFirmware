@@ -881,21 +881,25 @@ bool SEN5XSensor::getMetrics(meshtastic_Telemetry *measurement)
         }
 
         if (model != SEN50) {
+            LOG_INFO("SEN5X model: not SEN50");
             if (sen5xmeasurement.humidity != FLT_MAX) {
+                LOG_INFO("SEN5X: Adding humidity to metrics");
                 measurement->variant.air_quality_metrics.has_pm_humidity = true;
                 measurement->variant.air_quality_metrics.pm_humidity = sen5xmeasurement.humidity;
             }
             if (sen5xmeasurement.temperature != FLT_MAX) {
+                LOG_INFO("SEN5X: Adding temperature to metrics");
                 measurement->variant.air_quality_metrics.has_pm_temperature = true;
                 measurement->variant.air_quality_metrics.pm_temperature = sen5xmeasurement.temperature;
             }
-            if (sen5xmeasurement.noxIndex != FLT_MAX) {
+            if (sen5xmeasurement.vocIndex != FLT_MAX) {
                 measurement->variant.air_quality_metrics.has_pm_voc_idx = true;
                 measurement->variant.air_quality_metrics.pm_voc_idx = sen5xmeasurement.vocIndex;
             }
         }
 
         if (model == SEN55) {
+            LOG_INFO("SEN5X model: SEN55");
             if (sen5xmeasurement.noxIndex != FLT_MAX) {
                 measurement->variant.air_quality_metrics.has_pm_nox_idx = true;
                 measurement->variant.air_quality_metrics.pm_nox_idx = sen5xmeasurement.noxIndex;

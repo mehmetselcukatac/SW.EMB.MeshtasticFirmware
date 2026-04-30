@@ -973,7 +973,7 @@ void Power::readPowerStatus()
         // SENSOR and CLIENT_MUTE roles: use OCV[1] threshold (4050 mV)
         else if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR ||
                  config.device.role == meshtastic_Config_DeviceConfig_Role_CLIENT_MUTE) {
-            if (batteryLevel->getBattVoltage() < OCV[1]) {
+            if (batteryLevel->getBattVoltage() < OCV[6]) {
                 low_voltage_counter_sensor++;
                 LOG_DEBUG("Low voltage counter (SENSOR/CLIENT_MUTE): %d/10", low_voltage_counter_sensor);
                 if (low_voltage_counter_sensor > 1) {

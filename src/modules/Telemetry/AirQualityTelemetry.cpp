@@ -80,6 +80,10 @@ int32_t AirQualityTelemetryModule::runOnce()
 
     uint32_t result = UINT32_MAX;
 
+    moduleConfig.telemetry.air_quality_enabled = 1;
+    moduleConfig.telemetry.air_quality_screen_enabled = 1;
+    moduleConfig.telemetry.air_quality_interval = 15;
+
     if (!(moduleConfig.telemetry.air_quality_enabled || moduleConfig.telemetry.air_quality_screen_enabled ||
           AIR_QUALITY_TELEMETRY_MODULE_ENABLE)) {
         // If this module is not enabled, and the user doesn't want the display screen don't waste any OSThread time on it

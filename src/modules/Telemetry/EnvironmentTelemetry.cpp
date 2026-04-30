@@ -251,6 +251,8 @@ void EnvironmentTelemetryModule::i2cScanFinished(ScanI2C *i2cScanner)
 
 int32_t EnvironmentTelemetryModule::runOnce()
 {
+    LOG_INFO("Environment Telemetry: runOnce");
+
     if (sleepOnNextExecution == true) {
         sleepOnNextExecution = false;
         uint32_t nightyNightMs = Default::getConfiguredOrDefaultMs(moduleConfig.telemetry.environment_update_interval,
@@ -285,6 +287,8 @@ int32_t EnvironmentTelemetryModule::runOnce()
             // check if we have at least one sensor
             if (!sensors.empty()) {
                 result = DEFAULT_SENSOR_MINIMUM_WAIT_TIME_BETWEEN_READS;
+            } else {
+                LOG_WARN("Environment Telemetry: No sensors found");
             }
 
 #ifdef T1000X_SENSOR_EN
