@@ -769,6 +769,12 @@ void NimbleBluetooth::deinit()
     digitalWrite(BLE_LED, LED_STATE_OFF);
 #endif
 #ifndef NIMBLE_TWO
+
+    if (!NimBLEDevice::getInitialized() || !isActive()) {
+        LOG_INFO("NimBLE not initialized yet. Ignoring deinit request.");
+        return;
+    }
+    
     NimBLEDevice::deinit();
 #endif
 #endif

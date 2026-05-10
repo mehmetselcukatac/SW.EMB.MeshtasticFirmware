@@ -10,6 +10,9 @@
 
 // See sw-design.md for documentation
 
+// Cihazın pil seviyesı kritik seviyeye düştüğünde burada tanımlanan süre kadar uzun süreli derin uykuya geçilir.
+#define CRITICALLY_LOW_BATTERY_LONG_SDS_SLEEP_MINUTES 15
+
 #define EVENT_PRESS 1
 #define EVENT_WAKE_TIMER 2
 // #define EVENT_RECEIVED_PACKET 3

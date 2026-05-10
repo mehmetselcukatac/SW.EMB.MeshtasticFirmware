@@ -973,27 +973,47 @@ void Power::readPowerStatus()
         // SENSOR and CLIENT_MUTE roles: use OCV[1] threshold (4050 mV)
         else if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR ||
                  config.device.role == meshtastic_Config_DeviceConfig_Role_CLIENT_MUTE) {
-            if (batteryLevel->getBattVoltage() < OCV[6]) {
+/*             if (batteryLevel->getBattVoltage() < OCV[6]) {
                 low_voltage_counter_sensor++;
                 LOG_DEBUG("Low voltage counter (SENSOR/CLIENT_MUTE): %d/10", low_voltage_counter_sensor);
-                if (low_voltage_counter_sensor > 1) {
+                if (low_voltage_counter_sensor > 10) {
                     LOG_INFO("Low voltage detected for SENSOR/CLIENT_MUTE, trigger deep sleep");
                     powerFSM.trigger(EVENT_LOW_BATTERY_SENSOR);
                 }
+            // If voltage is critically low, trigger deep sleep immediately without waiting for 10 readings. Device should not try to operate at this voltage level. We should give a chance to solar charging.
+            //} else if (batteryLevel->getBattVoltage() < OCV[9]) {
+            } else 
+ */            
+            if (batteryChargePercent < CRITICALLY_LOW_BATTERY_PERCENT) {
+                // Set a flag to indicate critically low battery
+                critically_low_battery = true;
+                LOG_INFO("Critically low voltage detected for SENSOR/CLIENT_MUTE, trigger deep sleep");
+                powerFSM.trigger(EVENT_LOW_BATTERY_SENSOR);
             } else {
+                critically_low_battery = false;
                 low_voltage_counter_sensor = 0;
             }
         }
         // CLIENT role: use OCV[6] threshold (3630 mV)
         else if (config.device.role == meshtastic_Config_DeviceConfig_Role_CLIENT) {
-            if (batteryLevel->getBattVoltage() < OCV[6]) {
+/*             if (batteryLevel->getBattVoltage() < OCV[6]) {
                 low_voltage_counter_client++;
                 LOG_DEBUG("Low voltage counter (CLIENT): %d/10", low_voltage_counter_client);
                 if (low_voltage_counter_client > 10) {
                     LOG_INFO("Low voltage detected for CLIENT, trigger deep sleep");
                     powerFSM.trigger(EVENT_LOW_BATTERY_CLIENT);
                 }
+            // If voltage is critically low, trigger deep sleep immediately without waiting for 10 readings. Device should not try to operate at this voltage level. We should give a chance to solar charging.
+            //} else if (batteryLevel->getBattVoltage() < OCV[9]) {
+            } else 
+ */            
+            if (batteryChargePercent < CRITICALLY_LOW_BATTERY_PERCENT) {
+                // Set a flag to indicate critically low battery
+                critically_low_battery = true;
+                LOG_INFO("Critically low voltage detected for CLIENT, trigger deep sleep");
+                powerFSM.trigger(EVENT_LOW_BATTERY_CLIENT);
             } else {
+                critically_low_battery = false;
                 low_voltage_counter_client = 0;
             }
         }
@@ -1063,7 +1083,12 @@ int32_t Power::runOnce()
 #endif
     // Only read once every 20 seconds once the power status for the app has been
     // initialized
-    return (statusHandler && statusHandler->isInitialized()) ? (1000 * 20) : RUN_SAME;
+    // If battery critically low, read more frequently to give a chance to solar charging
+    if (critically_low_battery) {
+        return 1000 * 2; // Check every 2 seconds if battery is critically low
+    } else {
+        return (statusHandler && statusHandler->isInitialized()) ? (1000 * 20) : RUN_SAME;
+    }
 }
 
 /**

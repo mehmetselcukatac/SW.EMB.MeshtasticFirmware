@@ -82,7 +82,7 @@ int32_t AirQualityTelemetryModule::runOnce()
 
     moduleConfig.telemetry.air_quality_enabled = 1;
     moduleConfig.telemetry.air_quality_screen_enabled = 1;
-    moduleConfig.telemetry.air_quality_interval = 15;
+    moduleConfig.telemetry.air_quality_interval = 120;
 
     if (!(moduleConfig.telemetry.air_quality_enabled || moduleConfig.telemetry.air_quality_screen_enabled ||
           AIR_QUALITY_TELEMETRY_MODULE_ENABLE)) {

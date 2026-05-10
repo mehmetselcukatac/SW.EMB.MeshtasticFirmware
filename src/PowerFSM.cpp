@@ -68,7 +68,19 @@ static void sdsEnter()
 static void lowBattSDSEnter()
 {
     LOG_POWERFSM("State: Lower batt SDS");
-    doDeepSleep(Default::getConfiguredOrDefaultMs(config.power.sds_secs), false, true);
+    uint32_t msecToWake = Default::getConfiguredOrDefaultMs(config.power.sds_secs);
+
+    // If battery critically low, do long SDS to give a chance to solar charging
+    if (power->critically_low_battery) {
+        LOG_INFO("Battery critically low, going to long deep sleep until battery is charged");
+
+        // Burada kullandığımız critically low batt SDS uyku süresi çok kısa olmamalı. Cihazın güneşten kaydadeğer miktarda şarj olabilmesine imkan verecek bir süre boyunca uyumalı cihaz.
+        // Eğer bu süreyi çok kısa tutarsak, şarj seviyesinde yeterince yükselme olmadan cihaz sürekli olarak uyanıp tekrar uykuya geçebilir ve düşük güneş ışığı ile tam sınırda sürünebilir.
+        // Bu uyku algoritmasına bir BATT Voltage Hysteresis eklemek de mantıklı olabilir.
+        msecToWake = ONE_MINUTE_MS * CRITICALLY_LOW_BATTERY_LONG_SDS_SLEEP_MINUTES; // Wake and check every 15 minutes if battery is still critically low. Allow for solar charging and battery recovery from LVD.
+    }
+
+    doDeepSleep(msecToWake, false, true);
 }
 extern Power *power;
 

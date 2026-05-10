@@ -1,0 +1,19 @@
+SDS'ten uyandıktan sonra ilk AirQuality gönderimi 3dk sürüyor.
+AirQuality'de 120sn uyuyacak dememize rağmen, Power ayarlarındaki 5dk SDS uyku süresini işletiyor.
+
+Özetle
+- Uyan
+- 3dk sonra AirQuality gönder vd SDS uykusuna geç
+- 5dk sonra uyan
+şeklinde düzen izliyor.
+
+TODO
+- Yazılım başlar başlamaz, pil seviyesi çok düşükse hemen uzun SDS'ye geçir. Örneğin pil %0 en az 15 dakika uyut. Pilin toparlanmasına fırsat ver.
+Detay:
+Cihazın pil seviyesi çok düştüğünde, pil LVD'ye giriyor ve beslemesini tamamen kesiyor. Pil güneşten şarj olmaya başladığında 2.7V
+seviyelerinde yeniden besleme vermeye başlıyor ama bu seviyelerde Heltec düzgün çalışmaya başlayamıyor. Sürekli restart döngüsü
+şarj olup pilin toparlanmaya başlamasını da baltalıyor.
+
+- Power durum kontrol döngüsü 20sn'de bir çalışıyor. Eğer Low Batt durumundaysak, cihaz ilk döngüde uykuya geçmediyse,
+bir sonraki güç kontrolünü daha çabuk yapmak isteyebiliriz. 20sn içerisinde cihaz durumun aciliyetini anlamayıp
+çevre birimleri ile, sensör ölçümleri ile vs çok güç tüketip pil toparlanamayabilir.

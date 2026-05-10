@@ -13,6 +13,11 @@
 #define NUM_OCV_POINTS 11
 #endif
 
+// Cihazın pil seviyesı bu yüzdeye düştüğünde kritik olarak kabul edilir ve uzun süreli derin uykuya geçilir
+#ifndef CRITICALLY_LOW_BATTERY_PERCENT
+#define CRITICALLY_LOW_BATTERY_PERCENT 10
+#endif
+
 // Device specific curves go in variant.h
 #ifndef OCV_ARRAY
 #define OCV_ARRAY 4190, 4050, 3990, 3890, 3800, 3720, 3630, 3530, 3420, 3300, 3100
@@ -95,6 +100,7 @@ class Power : private concurrency::OSThread
     virtual int32_t runOnce() override;
     void setStatusHandler(meshtastic::PowerStatus *handler) { statusHandler = handler; }
     const uint16_t OCV[11] = {OCV_ARRAY};
+    bool critically_low_battery = false;
 
   protected:
     meshtastic::PowerStatus *statusHandler;
