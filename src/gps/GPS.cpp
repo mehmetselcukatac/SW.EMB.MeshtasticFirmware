@@ -484,7 +484,9 @@ int GPS::getACK(uint8_t *buffer, uint16_t size, uint8_t requestedClass, uint8_t 
 static const int serialSpeeds[1] = {GPS_BAUDRATE};
 static const int rareSerialSpeeds[1] = {GPS_BAUDRATE};
 #else
-static const int serialSpeeds[3] = {9600, 115200, 38400};
+// Sadece 9600 baud ve L76K GPS için deneme yapacağız. Diğer alternatifler için vakit kaybetmeyeceğiz. Kullandığımız ekipman ihtimali bu
+static const int serialSpeeds[1] = {9600};
+// static const int serialSpeeds[3] = {9600, 115200, 38400};
 static const int rareSerialSpeeds[3] = {4800, 57600, GPS_BAUDRATE};
 #endif
 
@@ -514,7 +516,7 @@ bool GPS::setup()
                 }
             }
             // Rare Serial Speeds
-#ifndef CONFIG_IDF_TARGET_ESP32C6
+/* #ifndef CONFIG_IDF_TARGET_ESP32C6
             if (probeTries == GPS_PROBETRIES) {
                 gnssModel = probe(rareSerialSpeeds[speedSelect]);
                 if (gnssModel == GNSS_MODEL_UNKNOWN) {
@@ -525,6 +527,13 @@ bool GPS::setup()
                 }
             }
 #endif
+ */        
+
+            // Eger GPS tarama işlevini orjinal hale getirmek istersek, yukarıdaki rareSerialSpeeds kısmını aktive edip, aşağıdaki if bloğunu silmemiz lazım.
+            if (gnssModel == GNSS_MODEL_UNKNOWN && currentStep == 0) {
+                LOG_WARN("Give up on fast L76K GPS probe and set to %d", GPS_BAUDRATE);
+                return true;
+            }
         }
 
         if (gnssModel != GNSS_MODEL_UNKNOWN) {
@@ -1322,7 +1331,9 @@ GnssModel_t GPS::probe(int serialSpeed)
         _serial_gps->write("$CFGMSG,0,2,0,1*18\r\n");
         _serial_gps->write("$CFGMSG,0,3,0,1*19\r\n");
         currentDelay = 20;
-        currentStep = 1;
+        // currentStep = 1;
+        // Doğrudan L76K adımına atla. Diğer GPS'ler için tarama yapmayacağız.
+        currentStep = 4;
         return GNSS_MODEL_UNKNOWN;
     }
     case 1: {
@@ -1359,10 +1370,13 @@ GnssModel_t GPS::probe(int serialSpeed)
         return GNSS_MODEL_UNKNOWN;
     }
     case 4: {
-        PROBE_SIMPLE("LC86", "$PQTMVERNO*58", "$PQTMVERNO,LC86", GNSS_MODEL_AG3352, 500);
+        //PROBE_SIMPLE("LC86", "$PQTMVERNO*58", "$PQTMVERNO,LC86", GNSS_MODEL_AG3352, 500);
         PROBE_SIMPLE("L76K", "$PCAS06,0*1B", "$GPTXT,01,01,02,SW=", GNSS_MODEL_MTK, 500);
-        currentDelay = 20;
-        currentStep = 5;
+        // currentDelay = 20;
+        // currentStep = 5;
+        // L76K tespit edilemezse step 0'a dönüyoruz.
+        currentDelay = 2000;
+        currentStep = 0;
         return GNSS_MODEL_UNKNOWN;
     }
     case 5: {
