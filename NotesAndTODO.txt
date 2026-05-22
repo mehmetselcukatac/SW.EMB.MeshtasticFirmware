@@ -7,6 +7,10 @@ AirQuality'de 120sn uyuyacak dememize rağmen, Power ayarlarındaki 5dk SDS uyku
 - 5dk sonra uyan
 şeklinde düzen izliyor.
 
+Sorular ve Cevaplar:
+Q: RTC ayarlı ve pil takılı iken deep sleep sırasında RTC bilgisi kaybediliyor mu?
+A: 
+
 TODO
 - Yazılım başlar başlamaz, pil seviyesi çok düşükse hemen uzun SDS'ye geçir. Örneğin pil %0 en az 15 dakika uyut. Pilin toparlanmasına fırsat ver.
 Detay:
@@ -17,3 +21,202 @@ seviyelerinde yeniden besleme vermeye başlıyor ama bu seviyelerde Heltec düzg
 - Power durum kontrol döngüsü 20sn'de bir çalışıyor. Eğer Low Batt durumundaysak, cihaz ilk döngüde uykuya geçmediyse,
 bir sonraki güç kontrolünü daha çabuk yapmak isteyebiliriz. 20sn içerisinde cihaz durumun aciliyetini anlamayıp
 çevre birimleri ile, sensör ölçümleri ile vs çok güç tüketip pil toparlanamayabilir.
+
+- RTC değeri biliniyorken, GPS takılı olsa bile onu çalıştırmayıp low power tutmaya devam edebilir miyiz? RTC ayarı için GPS önemli görünüyor.
+GPS bağlı değilse, yanlış saatle bile çalışsa kendisine bir milat seçip RTC ile zaman takip etmemiz önemli görünüyor çünkü sensör tarihçesi, gönderim, vs bunların zaman etiketlerini tutmamamız yazılımın davranışını etkiliyor.
+
+- SEN55 uyanma sonrası 3dk'da veri gönderme zamanlama logları
+Search "airquality|sen5" (260 hits in 1 file of 1 searched) [RegEx]
+  C:\Users\msa\OneDrive - Eklips Bilişim Teknolojileri San. ve Tic. Ltd. Şti\Müşteriler\EnerjiSA\EnerjiSA\Kozalak - Yangın İzleme Projesi\Meshtastic Development\Meshtastic Logs\Meshtastic Sensor Node Log.txt (260 hits)
+	Line  12: INFO  | ??:??:?? 8 SEN5X: found sensor model SEN55
+	Line  13: INFO  | ??:??:?? 8 SEN5X Firmware Version: 2.00
+	Line  14: INFO  | ??:??:?? 8 SEN5X Hardware Version: 0.00
+	Line  15: INFO  | ??:??:?? 8 SEN5X Protocol Version: 0.00
+	Line  16: INFO  | ??:??:?? 8 SEN5X state read from /prefs/sen5X.dat
+	Line  17: INFO  | ??:??:?? 8 SEN5X: Not enough RTCQuality, ignoring saved cleaning and VOC state
+	Line  18: INFO  | ??:??:?? 8 SEN5X: One shot mode enabled
+	Line  19: INFO  | ??:??:?? 8 SEN5X: Switch to RHT/Gas only measurement mode
+	Line  20: INFO  | ??:??:?? 8 Opened SEN5X sensor on i2c bus
+	Line  84: DEBUG | ??:??:?? 13 [Screen] AirQualityTelemetry wants a UI Frame
+	Line  88: INFO  | ??:??:?? 17 [AirQualityTelemetry] Air quality Telemetry: init
+	Line 101: INFO  | ??:??:?? 92 [AirQualityTelemetry] Waking up sensors...
+	Line 102: DEBUG | ??:??:?? 92 [AirQualityTelemetry] Sending sensors to sleep
+	Line 159: INFO  | ??:??:?? 152 [AirQualityTelemetry] Waking up sensors...
+	Line 160: DEBUG | ??:??:?? 152 [AirQualityTelemetry] Waking up: SEN5X
+	Line 161: DEBUG | ??:??:?? 152 [AirQualityTelemetry] SEN5X: Waking up sensor
+	Line 162: DEBUG | ??:??:?? 152 [AirQualityTelemetry] Changing I2C clock to 100000
+	Line 163: DEBUG | ??:??:?? 152 [AirQualityTelemetry] Changing I2C clock to 700000
+	Line 164: INFO  | ??:??:?? 152 [AirQualityTelemetry] SEN5X: Started measurement mode
+	Line 165: INFO  | ??:??:?? 167 [AirQualityTelemetry] Waking up sensors...
+	Line 166: DEBUG | ??:??:?? 167 [AirQualityTelemetry] SEN5X: Since measure started: 15000ms
+	Line 167: DEBUG | ??:??:?? 167 [AirQualityTelemetry] Changing I2C clock to 100000
+	Line 168: DEBUG | ??:??:?? 167 [AirQualityTelemetry] Changing I2C clock to 700000
+	Line 169: DEBUG | ??:??:?? 167 [AirQualityTelemetry] SEN5X: Reading PN Values
+	Line 170: DEBUG | ??:??:?? 167 [AirQualityTelemetry] Changing I2C clock to 100000
+	Line 171: DEBUG | ??:??:?? 167 [AirQualityTelemetry] Changing I2C clock to 700000
+	Line 172: DEBUG | ??:??:?? 167 [AirQualityTelemetry] Got SEN5X readings: pN0p5=4000, pN1p0=4600, pN2p5=4600, pN4p0=4600, pN10p0=4600, tSize=0.38
+	Line 173: INFO  | ??:??:?? 167 [AirQualityTelemetry] SEN5X: Concentration is low, we will ask again in the second warm up period
+	Line 174: DEBUG | ??:??:?? 167 [AirQualityTelemetry] SEN5X. Pending for ready 15000ms
+	Line 175: INFO  | ??:??:?? 182 [AirQualityTelemetry] Waking up sensors...
+	Line 176: DEBUG | ??:??:?? 182 [AirQualityTelemetry] SEN5X: Since measure started: 30000ms
+	Line 177: DEBUG | ??:??:?? 182 [AirQualityTelemetry] SEN5X. Pending for ready 0ms
+	Line 178: DEBUG | ??:??:?? 182 [AirQualityTelemetry] Reading SEN5X
+	Line 179: INFO  | ??:??:?? 182 [AirQualityTelemetry] SEN5X: Attempting to get metrics
+	Line 180: DEBUG | ??:??:?? 182 [AirQualityTelemetry] Changing I2C clock to 100000
+	Line 181: DEBUG | ??:??:?? 182 [AirQualityTelemetry] Changing I2C clock to 700000
+	Line 182: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 100000
+	Line 183: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 700000
+	Line 184: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 100000
+	Line 185: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 700000
+	Line 186: DEBUG | ??:??:?? 183 [AirQualityTelemetry] SEN5X: Reading PM Values
+	Line 187: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 100000
+	Line 188: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 700000
+	Line 189: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Got SEN5X readings: pM1p0=6, pM2p5=6, pM4p0=6, pM10p0=6
+	Line 190: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Got SEN5X readings: humidity=52.84, temperature=24.79, vocIndex=107.00
+	Line 191: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Got SEN5X readings: noxIndex=1.00
+	Line 192: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 100000
+	Line 193: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 700000
+	Line 194: DEBUG | ??:??:?? 183 [AirQualityTelemetry] SEN5X: Reading PN Values
+	Line 195: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 100000
+	Line 196: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 700000
+	Line 197: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Got SEN5X readings: pN0p5=4300, pN1p0=600, pN2p5=100, pN4p0=0, pN10p0=0, tSize=0.40
+	Line 198: INFO  | ??:??:?? 183 [AirQualityTelemetry] SEN5X model: not SEN50
+	Line 199: INFO  | ??:??:?? 183 [AirQualityTelemetry] SEN5X: Adding humidity to metrics
+	Line 200: INFO  | ??:??:?? 183 [AirQualityTelemetry] SEN5X: Adding temperature to metrics
+	Line 201: INFO  | ??:??:?? 183 [AirQualityTelemetry] SEN5X model: SEN55
+	Line 202: INFO  | ??:??:?? 183 [AirQualityTelemetry] Send: pm10_standard=6, pm25_standard=6, pm100_standard=6
+	Line 203: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Partially randomized packet id 1908055314
+	Line 204: INFO  | ??:??:?? 183 [AirQualityTelemetry] Sending packet to mesh
+	Line 205: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Ignore update from self
+	Line 206: DEBUG | ??:??:?? 183 [AirQualityTelemetry] handleReceived(LOCAL) (id=0x71ba9d12 fr=0x699be2a4 to=0xffffffff, transport = 0, WantAck=0, HopLim=3 Ch=0x0 Portnum=67 priority=70)
+	Line 207: DEBUG | ??:??:?? 183 [AirQualityTelemetry] No modules interested in portnum=67, src=LOCAL
+	Line 208: INFO  | ??:??:?? 183 [AirQualityTelemetry] Packet History - insert: Using new slot @uptime 183.210s TRACE NEW
+	Line 209: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Expand short PSK #1
+	Line 210: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Use AES128 key!
+	Line 211: DEBUG | ??:??:?? 183 [AirQualityTelemetry] enqueue for send (id=0x71ba9d12 fr=0x699be2a4 to=0xffffffff, transport = 0, WantAck=0, HopLim=3 Ch=0x8 encrypted len=81 hopStart=3 relay=0xa4 priority=70)
+	Line 212: DEBUG | ??:??:?? 183 [AirQualityTelemetry] txGood=0,txRelay=0,rxGood=4,rxBad=0
+	Line 213: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Use channel 0 (hash 0x8)
+	Line 214: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Expand short PSK #1
+	Line 215: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Use AES128 key!
+	Line 216: DEBUG | ??:??:?? 183 [AirQualityTelemetry] decoded message (id=0x71ba9d12 fr=0x699be2a4 to=0xffffffff, transport = 0, WantAck=0, HopLim=3 Ch=0x0 Portnum=67 hopStart=3 relay=0xa4 priority=70)
+	Line 217: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Send client notification to phone
+	Line 218: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Start next execution in 5s, then sleep
+	Line 219: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Send client notification to phone
+	Line 220: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Start next execution in 5s, then sleep
+	Line 221: DEBUG | ??:??:?? 183 [AirQualityTelemetry] TransmitHistory: saved 4 entries to disk
+	Line 222: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Sending sensors to sleep
+	Line 223: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Disabling SEN5X until next period
+	Line 224: INFO  | ??:??:?? 183 [AirQualityTelemetry] SEN5X: Getting VOC state from sensor
+	Line 225: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 100000
+	Line 226: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 700000
+	Line 227: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 100000
+	Line 228: DEBUG | ??:??:?? 183 [AirQualityTelemetry] Changing I2C clock to 700000
+	Line 229: DEBUG | ??:??:?? 183 [AirQualityTelemetry] SEN5X: VOC state retrieved from sensor: [42, 223, 49, 13, 0, 49, 240, 19]
+	Line 230: DEBUG | ??:??:?? 183 [AirQualityTelemetry] SEN5X: VOC state is valid
+	Line 231: DEBUG | ??:??:?? 183 [AirQualityTelemetry] sinceFirstMeasureStarted: 182s
+	Line 232: INFO  | ??:??:?? 183 [AirQualityTelemetry] SEN5X: Not stopping measurement, vocState is not stable yet!
+	Line 249: DEBUG | ??:??:?? 243 [AirQualityTelemetry] Sleeping for 120000ms, then awaking to send metrics again.
+	Line 250: INFO  | ??:??:?? 243 [AirQualityTelemetry] Enter deep sleep for 120 seconds
+	Line 251: INFO  | ??:??:?? 243 [AirQualityTelemetry] Disable bluetooth until reboot
+	Line 252: DEBUG | ??:??:?? 243 [AirQualityTelemetry] SX126x entering sleep mode
+	Line 253: INFO  | ??:??:?? 243 [AirQualityTelemetry] GPS deep sleep!
+	Line 254: INFO  | ??:??:?? 243 [AirQualityTelemetry] GPS power state move from ACTIVE to OFF
+	Line 255: DEBUG | ??:??:?? 243 [AirQualityTelemetry] Save to disk 31
+	Line 256: DEBUG | ??:??:?? 243 [AirQualityTelemetry] Opening /prefs/config.proto, fullAtomic=1
+	Line 257: INFO  | ??:??:?? 243 [AirQualityTelemetry] Save /prefs/config.proto
+	Line 258: DEBUG | ??:??:?? 243 [AirQualityTelemetry] Opening /prefs/module.proto, fullAtomic=1
+	Line 259: INFO  | ??:??:?? 243 [AirQualityTelemetry] Save /prefs/module.proto
+	Line 260: DEBUG | ??:??:?? 243 [AirQualityTelemetry] Opening /prefs/channels.proto, fullAtomic=1
+	Line 261: INFO  | ??:??:?? 243 [AirQualityTelemetry] Save /prefs/channels.proto
+	Line 262: DEBUG | ??:??:?? 244 [AirQualityTelemetry] Opening /prefs/device.proto, fullAtomic=1
+	Line 263: INFO  | ??:??:?? 244 [AirQualityTelemetry] Save /prefs/device.proto
+	Line 264: DEBUG | ??:??:?? 245 [AirQualityTelemetry] Opening /prefs/nodes.proto, fullAtomic=0
+	Line 265: INFO  | ??:??:?? 245 [AirQualityTelemetry] Save /prefs/nodes.proto
+	Line 284: DEBUG | ??:??:?? 5  /prefs/sen5X.dat (19 Bytes)
+	Line 299: INFO  | ??:??:?? 5 Sensirion SEN55 found at address 0x69
+	Line 364: INFO  | ??:??:?? 6 Init sensor: SEN5X
+	Line 365: INFO  | ??:??:?? 6 SEN5X: found sensor model SEN55
+	Line 366: INFO  | ??:??:?? 6 SEN5X Firmware Version: 2.00
+	Line 367: INFO  | ??:??:?? 6 SEN5X Hardware Version: 0.00
+	Line 368: INFO  | ??:??:?? 6 SEN5X Protocol Version: 0.00
+	Line 369: INFO  | ??:??:?? 6 SEN5X state read from /prefs/sen5X.dat
+	Line 370: INFO  | ??:??:?? 6 SEN5X: Not enough RTCQuality, ignoring saved cleaning and VOC state
+	Line 371: INFO  | ??:??:?? 6 SEN5X: One shot mode enabled
+	Line 372: INFO  | ??:??:?? 6 SEN5X: Switch to RHT/Gas only measurement mode
+	Line 373: INFO  | ??:??:?? 7 Opened SEN5X sensor on i2c bus
+	Line 429: INFO  | ??:??:?? 16 [AirQualityTelemetry] Air quality Telemetry: init
+	Line 442: INFO  | ??:??:?? 91 [AirQualityTelemetry] Waking up sensors...
+	Line 443: DEBUG | ??:??:?? 91 [AirQualityTelemetry] Sending sensors to sleep
+	Line 450: INFO  | 12:11:22 151 [AirQualityTelemetry] Waking up sensors...
+	Line 451: DEBUG | 12:11:22 151 [AirQualityTelemetry] Waking up: SEN5X
+	Line 452: DEBUG | 12:11:22 151 [AirQualityTelemetry] SEN5X: Waking up sensor
+	Line 453: INFO  | 12:11:22 151 [AirQualityTelemetry] SEN5X: Started measurement mode
+	Line 454: INFO  | 12:11:37 166 [AirQualityTelemetry] Waking up sensors...
+	Line 455: DEBUG | 12:11:37 166 [AirQualityTelemetry] SEN5X: Since measure started: 15000ms
+	Line 456: DEBUG | 12:11:38 166 [AirQualityTelemetry] SEN5X: Reading PN Values
+	Line 457: DEBUG | 12:11:38 166 [AirQualityTelemetry] Got SEN5X readings: pN0p5=4900, pN1p0=5600, pN2p5=5600, pN4p0=5600, pN10p0=5600, tSize=0.37
+	Line 458: INFO  | 12:11:38 166 [AirQualityTelemetry] SEN5X: Concentration is low, we will ask again in the second warm up period
+	Line 459: DEBUG | 12:11:38 166 [AirQualityTelemetry] SEN5X. Pending for ready 15000ms
+	Line 461: INFO  | 12:11:53 181 [AirQualityTelemetry] Waking up sensors...
+	Line 462: DEBUG | 12:11:53 181 [AirQualityTelemetry] SEN5X: Since measure started: 31000ms
+	Line 463: DEBUG | 12:11:53 181 [AirQualityTelemetry] SEN5X. Pending for ready 0ms
+	Line 464: DEBUG | 12:11:53 181 [AirQualityTelemetry] Reading SEN5X
+	Line 465: INFO  | 12:11:53 181 [AirQualityTelemetry] SEN5X: Attempting to get metrics
+	Line 466: DEBUG | 12:11:53 181 [AirQualityTelemetry] SEN5X: Reading PM Values
+	Line 467: DEBUG | 12:11:53 181 [AirQualityTelemetry] Got SEN5X readings: pM1p0=7, pM2p5=7, pM4p0=7, pM10p0=7
+	Line 468: DEBUG | 12:11:53 181 [AirQualityTelemetry] Got SEN5X readings: humidity=50.88, temperature=25.39, vocIndex=104.00
+	Line 469: DEBUG | 12:11:53 181 [AirQualityTelemetry] Got SEN5X readings: noxIndex=1.00
+	Line 470: DEBUG | 12:11:53 181 [AirQualityTelemetry] SEN5X: Reading PN Values
+	Line 471: DEBUG | 12:11:53 181 [AirQualityTelemetry] Got SEN5X readings: pN0p5=4800, pN1p0=700, pN2p5=0, pN4p0=0, pN10p0=0, tSize=0.38
+	Line 472: INFO  | 12:11:53 181 [AirQualityTelemetry] SEN5X model: not SEN50
+	Line 473: INFO  | 12:11:53 181 [AirQualityTelemetry] SEN5X: Adding humidity to metrics
+	Line 474: INFO  | 12:11:53 181 [AirQualityTelemetry] SEN5X: Adding temperature to metrics
+	Line 475: INFO  | 12:11:53 181 [AirQualityTelemetry] SEN5X model: SEN55
+	Line 476: INFO  | 12:11:53 181 [AirQualityTelemetry] Send: pm10_standard=7, pm25_standard=7, pm100_standard=7
+	Line 477: DEBUG | 12:11:53 181 [AirQualityTelemetry] Partially randomized packet id 2661889918
+	Line 478: INFO  | 12:11:53 181 [AirQualityTelemetry] Sending packet to mesh
+	Line 479: DEBUG | 12:11:53 181 [AirQualityTelemetry] Ignore update from self
+	Line 480: DEBUG | 12:11:53 181 [AirQualityTelemetry] handleReceived(LOCAL) (id=0x9ea9377e fr=0x699be2a4 to=0xffffffff, transport = 0, WantAck=0, HopLim=3 Ch=0x0 Portnum=67 rxtime=1779441113 priority=70)
+	Line 481: DEBUG | 12:11:53 181 [AirQualityTelemetry] No modules interested in portnum=67, src=LOCAL
+	Line 482: INFO  | 12:11:53 181 [AirQualityTelemetry] Packet History - insert: Using new slot @uptime 181.730s TRACE NEW
+	Line 483: DEBUG | 12:11:53 181 [AirQualityTelemetry] Expand short PSK #1
+	Line 484: DEBUG | 12:11:53 181 [AirQualityTelemetry] Use AES128 key!
+	Line 485: DEBUG | 12:11:53 181 [AirQualityTelemetry] enqueue for send (id=0x9ea9377e fr=0x699be2a4 to=0xffffffff, transport = 0, WantAck=0, HopLim=3 Ch=0x8 encrypted len=81 rxtime=1779441113 hopStart=3 relay=0xa
+	Line 486: DEBUG | 12:11:53 181 [AirQualityTelemetry] txGood=0,txRelay=0,rxGood=0,rxBad=0
+	Line 487: DEBUG | 12:11:53 181 [AirQualityTelemetry] Use channel 0 (hash 0x8)
+	Line 488: DEBUG | 12:11:53 181 [AirQualityTelemetry] Expand short PSK #1
+	Line 489: DEBUG | 12:11:53 181 [AirQualityTelemetry] Use AES128 key!
+	Line 490: DEBUG | 12:11:53 181 [AirQualityTelemetry] decoded message (id=0x9ea9377e fr=0x699be2a4 to=0xffffffff, transport = 0, WantAck=0, HopLim=3 Ch=0x0 Portnum=67 rxtime=1779441113 hopStart=3 relay=0xa4 prior
+	Line 491: DEBUG | 12:11:53 181 [AirQualityTelemetry] Send client notification to phone
+	Line 492: DEBUG | 12:11:53 181 [AirQualityTelemetry] Start next execution in 5s, then sleep
+	Line 493: DEBUG | 12:11:53 181 [AirQualityTelemetry] Send client notification to phone
+	Line 494: DEBUG | 12:11:53 181 [AirQualityTelemetry] Start next execution in 5s, then sleep
+	Line 495: DEBUG | 12:11:53 181 [AirQualityTelemetry] TransmitHistory: saved 4 entries to disk
+	Line 496: DEBUG | 12:11:53 181 [AirQualityTelemetry] Sending sensors to sleep
+	Line 497: DEBUG | 12:11:53 181 [AirQualityTelemetry] Disabling SEN5X until next period
+	Line 498: INFO  | 12:11:53 181 [AirQualityTelemetry] SEN5X: Getting VOC state from sensor
+	Line 499: DEBUG | 12:11:53 182 [AirQualityTelemetry] SEN5X: VOC state retrieved from sensor: [42, 248, 167, 91, 0, 49, 240, 11]
+	Line 500: DEBUG | 12:11:53 182 [AirQualityTelemetry] SEN5X: VOC state is valid
+	Line 501: DEBUG | 12:11:53 182 [AirQualityTelemetry] sinceFirstMeasureStarted: 1779441113s
+	Line 502: DEBUG | 12:11:53 182 [AirQualityTelemetry] Opening /prefs/sen5X.dat, fullAtomic=0
+	Line 503: INFO  | 12:11:53 182 [AirQualityTelemetry] SEN5X: state write to /prefs/sen5X.dat
+	Line 504: INFO  | 12:11:53 182 [AirQualityTelemetry] SEN5X: state write to /prefs/sen5X.dat successful
+	Line 505: INFO  | 12:11:53 182 [AirQualityTelemetry] SEN5X: One shot mode enabled
+	Line 506: INFO  | 12:11:53 182 [AirQualityTelemetry] SEN5X: Switch to RHT/Gas only measurement mode
+	Line 522: DEBUG | 12:12:54 242 [AirQualityTelemetry] Sleeping for 120000ms, then awaking to send metrics again.
+	Line 523: INFO  | 12:12:54 242 [AirQualityTelemetry] Enter deep sleep for 120 seconds
+	Line 524: INFO  | 12:12:54 242 [AirQualityTelemetry] Disable bluetooth until reboot
+	Line 525: DEBUG | 12:12:54 242 [AirQualityTelemetry] SX126x entering sleep mode
+	Line 526: INFO  | 12:12:54 242 [AirQualityTelemetry] GPS deep sleep!
+	Line 527: INFO  | 12:12:54 242 [AirQualityTelemetry] GPS power state move from ACTIVE to OFF
+	Line 528: DEBUG | 12:12:54 242 [AirQualityTelemetry] Save to disk 31
+	Line 529: DEBUG | 12:12:54 242 [AirQualityTelemetry] Opening /prefs/config.proto, fullAtomic=1
+	Line 530: INFO  | 12:12:54 242 [AirQualityTelemetry] Save /prefs/config.proto
+	Line 531: DEBUG | 12:12:55 243 [AirQualityTelemetry] Opening /prefs/module.proto, fullAtomic=1
+	Line 532: INFO  | 12:12:55 243 [AirQualityTelemetry] Save /prefs/module.proto
+	Line 533: DEBUG | 12:12:55 243 [AirQualityTelemetry] Opening /prefs/channels.proto, fullAtomic=1
+	Line 534: INFO  | 12:12:55 243 [AirQualityTelemetry] Save /prefs/channels.proto
+	Line 535: DEBUG | 12:12:55 243 [AirQualityTelemetry] Opening /prefs/device.proto, fullAtomic=1
+	Line 536: INFO  | 12:12:55 244 [AirQualityTelemetry] Save /prefs/device.proto
+	Line 537: DEBUG | 12:12:55 244 [AirQualityTelemetry] Opening /prefs/nodes.proto, fullAtomic=0
+	Line 538: INFO  | 12:12:55 244 [AirQualityTelemetry] Save /prefs/nodes.proto

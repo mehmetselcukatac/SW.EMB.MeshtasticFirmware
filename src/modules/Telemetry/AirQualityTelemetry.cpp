@@ -70,6 +70,10 @@ void AirQualityTelemetryModule::i2cScanFinished(ScanI2C *i2cScanner)
 
 int32_t AirQualityTelemetryModule::runOnce()
 {
+    moduleConfig.telemetry.air_quality_enabled = 1;
+    moduleConfig.telemetry.air_quality_screen_enabled = 1;
+    moduleConfig.telemetry.air_quality_interval = 120; // Kullanıcı ayarından bağımsız olarak kodda her 2 dakikada bir ölçüm yapacak şekilde ayarladık.
+
     if (sleepOnNextExecution == true) {
         sleepOnNextExecution = false;
         uint32_t nightyNightMs = Default::getConfiguredOrDefaultMs(moduleConfig.telemetry.air_quality_interval,
@@ -79,10 +83,6 @@ int32_t AirQualityTelemetryModule::runOnce()
     }
 
     uint32_t result = UINT32_MAX;
-
-    moduleConfig.telemetry.air_quality_enabled = 1;
-    moduleConfig.telemetry.air_quality_screen_enabled = 1;
-    moduleConfig.telemetry.air_quality_interval = 120;
 
     if (!(moduleConfig.telemetry.air_quality_enabled || moduleConfig.telemetry.air_quality_screen_enabled ||
           AIR_QUALITY_TELEMETRY_MODULE_ENABLE)) {
@@ -95,6 +95,8 @@ int32_t AirQualityTelemetryModule::runOnce()
         // do some setup
         firstTime = false;
 
+        LOG_INFO("Air quality Telemetry: First call of runOnce, doing setup");
+
         if (moduleConfig.telemetry.air_quality_enabled) {
             LOG_INFO("Air quality Telemetry: init");
 
@@ -106,8 +108,12 @@ int32_t AirQualityTelemetryModule::runOnce()
 
         // it's possible to have this module enabled, only for displaying values on the screen.
         // therefore, we should only enable the sensor loop if measurement is also enabled
-        return result == UINT32_MAX ? disable() : setStartDelay();
+        // return result == UINT32_MAX ? disable() : setStartDelay();
+
+        // Firmware standart olarak ilk başta 75sn bekliyordu. AirQuality sensörlerini uyandurmak için bile bu süreyi bekliyorduk. Bu vakti kaybetmemek için kısa bekleyip yeniden runOnce çağıracağız.
+        return result == UINT32_MAX ? disable() : 40000;
     } else {
+        LOG_INFO("Air quality Telemetry: Subsequent call of runOnce");
         // if we somehow got to a second run of this module with measurement disabled, then just wait forever
         if (!moduleConfig.telemetry.air_quality_enabled && !AIR_QUALITY_TELEMETRY_MODULE_ENABLE) {
             return disable();
@@ -120,27 +126,44 @@ int32_t AirQualityTelemetryModule::runOnce()
         for (TelemetrySensor *sensor : sensors) {
             if (!sensor->canSleep()) {
                 LOG_DEBUG("%s sensor doesn't have sleep feature. Skipping", sensor->sensorName);
-            } else if (((lastTelemetry == 0) ||
-                        !Throttle::isWithinTimespanMs(lastTelemetry - sensor->wakeUpTimeMs(),
-                                                      Default::getConfiguredOrDefaultMsScaled(
-                                                          moduleConfig.telemetry.air_quality_interval,
-                                                          default_telemetry_broadcast_interval_secs, numOnlineNodes))) &&
-                       airTime->isTxAllowedChannelUtil(config.device.role != meshtastic_Config_DeviceConfig_Role_SENSOR) &&
-                       airTime->isTxAllowedAirUtil()) {
-                if (!sensor->isActive()) {
-                    LOG_DEBUG("Waking up: %s", sensor->sensorName);
-                    return sensor->wakeUp();
-                } else {
-                    int32_t pendingForReadyMs = sensor->pendingForReadyMs();
-                    LOG_DEBUG("%s. Pending for ready %ums", sensor->sensorName, pendingForReadyMs);
-                    if (pendingForReadyMs) {
-                        return pendingForReadyMs;
+            } else {
+                // Detailed debugging for the else if condition
+                bool lastTelemetryZero = (lastTelemetry == 0);
+                uint32_t intervalMs = Default::getConfiguredOrDefaultMsScaled(
+                    moduleConfig.telemetry.air_quality_interval,
+                    default_telemetry_broadcast_interval_secs, numOnlineNodes);
+                int32_t wakeUpTimeMs = sensor->wakeUpTimeMs();
+                uint32_t timeSinceLastTelemetry = lastTelemetry > wakeUpTimeMs ? lastTelemetry - wakeUpTimeMs : 0;
+                bool isWithinTimespan = Throttle::isWithinTimespanMs(timeSinceLastTelemetry, intervalMs);
+                bool timeCondition = lastTelemetryZero || !isWithinTimespan || config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR;
+                bool channelUtilOk = airTime->isTxAllowedChannelUtil(config.device.role != meshtastic_Config_DeviceConfig_Role_SENSOR);
+                bool airUtilOk = airTime->isTxAllowedAirUtil();
+                
+                LOG_DEBUG("%s condition check: lastTelemetry=%u, wakeUpTime=%ld, interval=%u, timeSince=%u, isWithin=%s, timeOk=%s, channelUtil=%s, airUtil=%s",
+                    sensor->sensorName, lastTelemetry, wakeUpTimeMs, intervalMs, timeSinceLastTelemetry,
+                    isWithinTimespan ? "true" : "false", timeCondition ? "true" : "false",
+                    channelUtilOk ? "true" : "false", airUtilOk ? "true" : "false");
+                
+                if (timeCondition && channelUtilOk && airUtilOk) {
+                    if (!sensor->isActive()) {
+                        LOG_DEBUG("Waking up: %s", sensor->sensorName);
+                        return sensor->wakeUp();
+                    } else {
+                        int32_t pendingForReadyMs = sensor->pendingForReadyMs();
+                        LOG_DEBUG("%s. Pending for ready %ums", sensor->sensorName, pendingForReadyMs);
+                        if (pendingForReadyMs) {
+                            return pendingForReadyMs;
+                        }
                     }
+                } else {
+                    LOG_DEBUG("Not waking up %s yet. Time condition: %s, Channel Util: %s, Air Util: %s",
+                        sensor->sensorName, timeCondition ? "true" : "false",
+                        channelUtilOk ? "true" : "false", airUtilOk ? "true" : "false");
                 }
             }
         }
 
-        if (((lastTelemetry == 0) ||
+        if ((config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR ||(lastTelemetry == 0) ||
              !Throttle::isWithinTimespanMs(lastTelemetry, Default::getConfiguredOrDefaultMsScaled(
                                                               moduleConfig.telemetry.air_quality_interval,
                                                               default_telemetry_broadcast_interval_secs, numOnlineNodes))) &&
@@ -171,6 +194,9 @@ int32_t AirQualityTelemetryModule::runOnce()
                 }
             }
         }
+
+        // Bu aşamada cihazı hızla uyutmak istiyoruz. Bu yüzden bir sonraki runOnce çalışmasını 1sn sonra yaptıracağız ve uykuya dalması gerekiyor.
+        return 1000;
     }
     return min(sendToPhoneIntervalMs, result);
 }
@@ -417,20 +443,6 @@ bool AirQualityTelemetryModule::sendTelemetry(NodeNum dest, bool phoneOnly)
         } else {
             LOG_INFO("Sending packet to mesh");
             service->sendToMesh(p, RX_SRC_LOCAL, true);
-
-            if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR && config.power.is_power_saving) {
-                meshtastic_ClientNotification *notification = clientNotificationPool.allocZeroed();
-                notification->level = meshtastic_LogRecord_Level_INFO;
-                notification->time = getValidTime(RTCQualityFromNet);
-                sprintf(notification->message, "Sending telemetry and sleeping for %us interval in a moment",
-                        Default::getConfiguredOrDefaultMs(moduleConfig.telemetry.air_quality_interval,
-                                                          default_telemetry_broadcast_interval_secs) /
-                            1000U);
-                service->sendClientNotification(notification);
-                sleepOnNextExecution = true;
-                LOG_DEBUG("Start next execution in 5s, then sleep");
-                setIntervalFromNow(FIVE_SECONDS_MS);
-            }
 
             if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR && config.power.is_power_saving) {
                 meshtastic_ClientNotification *notification = clientNotificationPool.allocZeroed();
