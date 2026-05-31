@@ -220,3 +220,15 @@ Search "airquality|sen5" (260 hits in 1 file of 1 searched) [RegEx]
 	Line 536: INFO  | 12:12:55 244 [AirQualityTelemetry] Save /prefs/device.proto
 	Line 537: DEBUG | 12:12:55 244 [AirQualityTelemetry] Opening /prefs/nodes.proto, fullAtomic=0
 	Line 538: INFO  | 12:12:55 244 [AirQualityTelemetry] Save /prefs/nodes.proto
+
+
+
+- NodeInfo'da pil bilgisi yok şunlar var:
+Topic: enerjisa/msh/EU_868/2/json/LongFast/!0acb1e2cQoS: 0
+{"channel":0,"from":181083692,"hop_start":3,"hops_away":0,"id":3764039616,"payload":{"hardware":110,"id":"!0acb1e2c","longname":"WIFI_GW_1e2c","role":2,"shortname":"1e2c"},"sender":"!0acb1e2c","timestamp":1780232126,"to":4294967295,"type":"nodeinfo"}
+
+- Cihaz rolleri ile ilgili
+WiFi MQTT aktarım node'u için ROUTER rolü seçmek pek mantıklı görünmüyor.
+Router LORA retransmit yapıyor, biz bunu istemiyoruz.
+Router'da device telemetri periyodu en sık 12 saat olabiliyor, daha sıklaştırılamıyor.
+Client_Mute daha uygun bir rol olarak görünüyor. 30dk device telemetri gönderimi mümkün. Lora retransmit yapmıyor.

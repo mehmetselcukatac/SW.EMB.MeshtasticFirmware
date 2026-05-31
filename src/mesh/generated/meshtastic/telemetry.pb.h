@@ -337,6 +337,12 @@ typedef struct _meshtastic_AirQualityMetrics {
     /* Typical Particle Size in um */
     bool has_particles_tps;
     float particles_tps;
+    /* Battery charge percentage 0-100, or 101 when USB power is present. */
+    bool has_battery_level;
+    uint32_t battery_level;
+    /* Device battery voltage in volts. */
+    bool has_voltage;
+    float voltage;
 } meshtastic_AirQualityMetrics;
 
 /* Local device mesh statistics */
@@ -510,7 +516,7 @@ extern "C" {
 #define meshtastic_DeviceMetrics_init_default    {false, 0, false, 0, false, 0, false, 0, false, 0}
 #define meshtastic_EnvironmentMetrics_init_default {false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define meshtastic_PowerMetrics_init_default     {false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
-#define meshtastic_AirQualityMetrics_init_default {false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
+#define meshtastic_AirQualityMetrics_init_default {false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define meshtastic_LocalStats_init_default       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 #define meshtastic_TrafficManagementStats_init_default {0, 0, 0, 0, 0, 0, 0}
 #define meshtastic_HealthMetrics_init_default    {false, 0, false, 0, false, 0}
@@ -521,7 +527,7 @@ extern "C" {
 #define meshtastic_DeviceMetrics_init_zero       {false, 0, false, 0, false, 0, false, 0, false, 0}
 #define meshtastic_EnvironmentMetrics_init_zero  {false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define meshtastic_PowerMetrics_init_zero        {false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
-#define meshtastic_AirQualityMetrics_init_zero   {false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
+#define meshtastic_AirQualityMetrics_init_zero   {false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
 #define meshtastic_LocalStats_init_zero          {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 #define meshtastic_TrafficManagementStats_init_zero {0, 0, 0, 0, 0, 0, 0}
 #define meshtastic_HealthMetrics_init_zero       {false, 0, false, 0, false, 0}
@@ -599,6 +605,8 @@ extern "C" {
 #define meshtastic_AirQualityMetrics_pm_voc_idx_tag 23
 #define meshtastic_AirQualityMetrics_pm_nox_idx_tag 24
 #define meshtastic_AirQualityMetrics_particles_tps_tag 25
+#define meshtastic_AirQualityMetrics_battery_level_tag 26
+#define meshtastic_AirQualityMetrics_voltage_tag 27
 #define meshtastic_LocalStats_uptime_seconds_tag 1
 #define meshtastic_LocalStats_channel_utilization_tag 2
 #define meshtastic_LocalStats_air_util_tx_tag    3
@@ -732,7 +740,9 @@ X(a, STATIC,   OPTIONAL, FLOAT,    pm_temperature,   21) \
 X(a, STATIC,   OPTIONAL, FLOAT,    pm_humidity,      22) \
 X(a, STATIC,   OPTIONAL, FLOAT,    pm_voc_idx,       23) \
 X(a, STATIC,   OPTIONAL, FLOAT,    pm_nox_idx,       24) \
-X(a, STATIC,   OPTIONAL, FLOAT,    particles_tps,    25)
+X(a, STATIC,   OPTIONAL, FLOAT,    particles_tps,    25) \
+X(a, STATIC,   OPTIONAL, UINT32,   battery_level,    26) \
+X(a, STATIC,   OPTIONAL, FLOAT,    voltage,          27)
 #define meshtastic_AirQualityMetrics_CALLBACK NULL
 #define meshtastic_AirQualityMetrics_DEFAULT NULL
 
@@ -850,7 +860,7 @@ extern const pb_msgdesc_t meshtastic_SEN5XState_msg;
 
 /* Maximum encoded size of messages (where known) */
 #define MESHTASTIC_MESHTASTIC_TELEMETRY_PB_H_MAX_SIZE meshtastic_Telemetry_size
-#define meshtastic_AirQualityMetrics_size        150
+#define meshtastic_AirQualityMetrics_size        163
 #define meshtastic_DeviceMetrics_size            27
 #define meshtastic_EnvironmentMetrics_size       113
 #define meshtastic_HealthMetrics_size            11

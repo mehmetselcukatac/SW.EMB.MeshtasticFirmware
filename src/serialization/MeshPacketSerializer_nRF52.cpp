@@ -196,6 +196,12 @@ std::string MeshPacketSerializer::JsonSerialize(const meshtastic_MeshPacket *mp,
                     if (decoded->variant.air_quality_metrics.has_form_humidity) {
                         jsonObj["payload"]["form_humidity"] = decoded->variant.air_quality_metrics.form_humidity;
                     }
+                    if (decoded->variant.air_quality_metrics.has_battery_level) {
+                        jsonObj["payload"]["battery_level"] = (int)decoded->variant.air_quality_metrics.battery_level;
+                    }
+                    if (decoded->variant.air_quality_metrics.has_voltage) {
+                        jsonObj["payload"]["voltage"] = decoded->variant.air_quality_metrics.voltage;
+                    }
                 } else if (decoded->which_variant == meshtastic_Telemetry_power_metrics_tag) {
                     if (decoded->variant.power_metrics.has_ch1_voltage) {
                         jsonObj["payload"]["voltage_ch1"] = decoded->variant.power_metrics.ch1_voltage;

@@ -351,6 +351,14 @@ bool AirQualityTelemetryModule::getAirQualityTelemetry(meshtastic_Telemetry *m)
         hasSensor = true;
     }
 
+    if (powerStatus) {
+        m->variant.air_quality_metrics.has_battery_level = true;
+        m->variant.air_quality_metrics.battery_level =
+            (!powerStatus->getHasBattery() || powerStatus->getIsCharging()) ? 101u : powerStatus->getBatteryChargePercent();
+        m->variant.air_quality_metrics.has_voltage = true;
+        m->variant.air_quality_metrics.voltage = powerStatus->getBatteryVoltageMv() / 1000.0;
+    }
+
     return valid && hasSensor;
 }
 
