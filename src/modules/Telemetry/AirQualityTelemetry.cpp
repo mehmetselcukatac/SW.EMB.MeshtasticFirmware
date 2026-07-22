@@ -6,6 +6,7 @@
 #include "../mesh/generated/meshtastic/telemetry.pb.h"
 #include "AirQualityTelemetry.h"
 #include "Default.h"
+#include "GPSStatus.h"
 #include "MeshService.h"
 #include "NodeDB.h"
 #include "PowerFSM.h"
@@ -72,7 +73,8 @@ int32_t AirQualityTelemetryModule::runOnce()
 {
     moduleConfig.telemetry.air_quality_enabled = 1;
     moduleConfig.telemetry.air_quality_screen_enabled = 1;
-    moduleConfig.telemetry.air_quality_interval = 120; // Kullanıcı ayarından bağımsız olarak kodda her 2 dakikada bir ölçüm yapacak şekilde ayarladık.
+    //moduleConfig.telemetry.air_quality_interval = 830; // Kullanıcı ayarından bağımsız olarak kodda her 15 dakikada bir ölçüm yapacak şekilde ayarladık.
+    moduleConfig.telemetry.air_quality_interval = 300; // Kullanıcı ayarından bağımsız olarak kodda her 15 dakikada bir ölçüm yapacak şekilde ayarladık.
 
     if (sleepOnNextExecution == true) {
         sleepOnNextExecution = false;
@@ -111,7 +113,8 @@ int32_t AirQualityTelemetryModule::runOnce()
         // return result == UINT32_MAX ? disable() : setStartDelay();
 
         // Firmware standart olarak ilk başta 75sn bekliyordu. AirQuality sensörlerini uyandurmak için bile bu süreyi bekliyorduk. Bu vakti kaybetmemek için kısa bekleyip yeniden runOnce çağıracağız.
-        return result == UINT32_MAX ? disable() : 40000;
+        return result == UINT32_MAX ? disable() : 500; // 500ms sonra wakeup ve measurement mode geçiş deneyelim bakalım ne oluyor?
+        // return result == UINT32_MAX ? disable() : 40000;
     } else {
         LOG_INFO("Air quality Telemetry: Subsequent call of runOnce");
         // if we somehow got to a second run of this module with measurement disabled, then just wait forever
@@ -196,7 +199,8 @@ int32_t AirQualityTelemetryModule::runOnce()
         }
 
         // Bu aşamada cihazı hızla uyutmak istiyoruz. Bu yüzden bir sonraki runOnce çalışmasını 1sn sonra yaptıracağız ve uykuya dalması gerekiyor.
-        return 1000;
+        // 1sn sonra uyutunca henüz LoRa iletimi tamamlanamıyor sanırım. Cihazı power saving = enabled durumda işlettiğmizde karşıya veri iletimi olmuyor çoğu zaman veya hiç. O yüzden daha uzun gecikme koyuyoruz.
+        return 5000;
     }
     return min(sendToPhoneIntervalMs, result);
 }
@@ -357,6 +361,30 @@ bool AirQualityTelemetryModule::getAirQualityTelemetry(meshtastic_Telemetry *m)
             (!powerStatus->getHasBattery() || powerStatus->getIsCharging()) ? 101u : powerStatus->getBatteryChargePercent();
         m->variant.air_quality_metrics.has_voltage = true;
         m->variant.air_quality_metrics.voltage = powerStatus->getBatteryVoltageMv() / 1000.0;
+    }
+
+    // Add GPS or configured position information
+    if (gpsStatus) {
+        int32_t lat = gpsStatus->getLatitude();
+        int32_t lon = gpsStatus->getLongitude();
+        int32_t alt = gpsStatus->getAltitude();
+
+        LOG_INFO("Air quality telemetry position: gpsStatus available, lat=%ld, lon=%ld, alt=%ld", (long)lat, (long)lon,
+                 (long)alt);
+
+        if (lat != 0 || lon != 0) {
+            m->variant.air_quality_metrics.has_latitude_i = true;
+            m->variant.air_quality_metrics.latitude_i = lat;
+            m->variant.air_quality_metrics.has_longitude_i = true;
+            m->variant.air_quality_metrics.longitude_i = lon;
+            m->variant.air_quality_metrics.has_altitude = true;
+            m->variant.air_quality_metrics.altitude = alt;
+            LOG_INFO("Air quality telemetry position fields added to packet");
+        } else {
+            LOG_WARN("Air quality telemetry position fields not added: lat/lon are zero");
+        }
+    } else {
+        LOG_WARN("Air quality telemetry position: gpsStatus not available, position fields not added");
     }
 
     return valid && hasSensor;

@@ -1,3 +1,267 @@
+01.06.2026 - 
+Cihazın uyanıp SEN55 verisi göndermesi ve uykuya dalması 90sn sürüyor.
+Sonra 2dk uyuyup tekrar uyanıp gönderme sürecine giriyor.
+
+2sn - SEN55 I2C detect
+4sn - SEN5X: Switch to RHT/Gas only measurement mode
+13sn - Air quality Telemetry: First call of runOnce, doing setup - BUNU DAHA ERKEN YAPSAK İYİ OLUR. Burada 10sn kayıp var.
+53sn - SEN5X: Waking up sensor
+		SEN5X: Started measurement mode
+
+4sn'den 53sn kadar RHT/GAS only measurement mode'da bekliyoruz gibi görünüyor.
+
+��@INFO  | ??:??:?? 1 
+
+//\ E S H T /\ S T / C
+
+INFO  | ??:??:?? 1 Booted, wake cause 4 (boot count 430), reset_reason=timer
+DEBUG | ??:??:?? 1 Disable any holds on RTC IO pads
+INFO  | ??:??:?? 1 Wait for peripherals to stabilize
+DEBUG | ??:??:?? 2 Filesystem files (20480/3538944 Bytes):
+DEBUG | ??:??:?? 2  /Messages_default.msgs (1 Bytes)
+DEBUG | ??:??:?? 2  /prefs/channels.proto (57 Bytes)
+DEBUG | ??:??:?? 2  /prefs/config.proto (187 Bytes)
+DEBUG | ??:??:?? 2  /prefs/device.proto (192 Bytes)
+DEBUG | ??:??:?? 2  /prefs/module.proto (112 Bytes)
+DEBUG | ??:??:?? 2  /prefs/nodes.proto (2025 Bytes)
+DEBUG | ??:??:?? 2  /prefs/sen5X.dat (19 Bytes)
+DEBUG | ??:??:?? 2  /prefs/transmit_history.dat (30 Bytes)
+[  2865][I][esp32-hal-i2c.c:75] i2cInit(): Initialising I2C Master: sda=4 scl=3 freq=100000
+INFO  | ??:??:?? 2 Starting Bus with (SDA) 17 and (SCL) 18: 
+[  2875][I][esp32-hal-i2c.c:75] i2cInit(): Initialising I2C Master: sda=17 scl=18 freq=100000
+DEBUG | ??:??:?? 2 Power::max17048Init lipo sensor is not ready yet
+DEBUG | ??:??:?? 2 Use analog input 1 for battery level
+INFO  | ??:??:?? 2 ADC config based on Two Point values and fitting curve coefficients stored in eFuse
+INFO  | ??:??:?? 2 Scan for i2c devices
+DEBUG | ??:??:?? 2 Scan for I2C devices on port 2
+DEBUG | ??:??:?? 2 Scan for I2C devices on port 1
+INFO  | ??:??:?? 2 SSD1306 found at address 0x3c
+INFO  | ??:??:?? 2 SSD1306 found at address 0x3c
+DEBUG | ??:??:?? 2 0x5 subtype probed in 2 tries 
+DEBUG | ??:??:?? 2 Register value from 0x69: 0xff
+INFO  | ??:??:?? 2 Sensirion SEN55 found at address 0x69
+INFO  | ??:??:?? 2 2 I2C devices found
+DEBUG | ??:??:?? 2 suppress screen wake because this is a headless timer wakeup
+DEBUG | ??:??:?? 2 acc_info = 0
+INFO  | ??:??:?? 2 S:B:110,2.7.21.a9000eb,heltec-v4,mehmetselcukatac/SW.EMB.MeshtasticFirmware
+INFO  | ??:??:?? 2 Build timestamp: 1780174800
+DEBUG | ??:??:?? 2 Total heap: 276024
+DEBUG | ??:??:?? 2 Free heap: 232976
+DEBUG | ??:??:?? 2 Total PSRAM: 2095103
+DEBUG | ??:??:?? 2 Free PSRAM: 2095103
+DEBUG | ??:??:?? 2 NVS: UsedEntries 163, FreeEntries 467, AllEntries 630, NameSpaces 8
+DEBUG | ??:??:?? 2 Setup Preferences in Flash Storage
+DEBUG | ??:??:?? 2 Number of Device Reboots: 3018
+INFO  | ??:??:?? 2 esp_ota_get_partition_description failed
+INFO  | ??:??:?? 2 MeshtasticOTA firmware not available
+INFO  | ??:??:?? 2 Init NodeDB
+[  2993][E][vfs_api.cpp:105] open(): /littlefs/static/static does not exist, no permits for creation
+[  3008][E][vfs_api.cpp:105] open(): /littlefs/prefs/db.proto does not exist, no permits for creation
+INFO  | ??:??:?? 3 Load /prefs/nodes.proto
+INFO  | ??:??:?? 3 Loaded /prefs/nodes.proto successfully
+INFO  | ??:??:?? 3 Loaded saved nodedatabase version 24, with nodes count: 14
+INFO  | ??:??:?? 3 Load /prefs/device.proto
+INFO  | ??:??:?? 3 Loaded /prefs/device.proto successfully
+INFO  | ??:??:?? 3 Loaded saved devicestate version 24
+INFO  | ??:??:?? 3 Load /prefs/config.proto
+INFO  | ??:??:?? 3 Loaded /prefs/config.proto successfully
+INFO  | ??:??:?? 3 Loaded saved config version 24
+ERROR | ??:??:?? 3 Invalid channel index 0 > 0, malformed packet received?
+INFO  | ??:??:?? 3 Load /prefs/module.proto
+INFO  | ??:??:?? 3 Loaded /prefs/module.proto successfully
+INFO  | ??:??:?? 3 Loaded saved moduleConfig version 24
+INFO  | ??:??:?? 3 Load /prefs/channels.proto
+INFO  | ??:??:?? 3 Loaded /prefs/channels.proto successfully
+INFO  | ??:??:?? 3 Loaded saved channelFile version 24
+[  3219][E][vfs_api.cpp:105] open(): /littlefs/prefs/uiconfig.proto does not exist, no permits for creation
+ERROR | ??:??:?? 3 Could not open / read /prefs/uiconfig.proto
+DEBUG | ??:??:?? 3 cleanupMeshDB purged 0 entries
+DEBUG | ??:??:?? 3 Use nodenum 0x699be2a4 
+DEBUG | ??:??:?? 3 Number of Device Reboots: 3018
+DEBUG | ??:??:?? 3 Expand short PSK #1
+INFO  | ??:??:?? 3 Wanted region 3, using EU_868
+DEBUG | ??:??:?? 3 Coerce telemetry to role-aware minimum on defaults
+DEBUG | ??:??:?? 3 Coerce position broadcasts to role-aware minimum and smart broadcast min of 5 minutes on defaults
+INFO  | ??:??:?? 3 Sort took 0 milliseconds
+DEBUG | ??:??:?? 3 Save to disk 4
+DEBUG | ??:??:?? 3 Opening /prefs/device.proto, fullAtomic=1
+INFO  | ??:??:?? 3 Save /prefs/device.proto
+INFO  | ??:??:?? 3 TransmitHistory: loaded 4 entries from disk
+WARN  | ??:??:?? 3 Packet History - Invalid size -1, using default 500
+DEBUG | ??:??:?? 3 Tracker/Sensor: Skip start melody
+DEBUG | ??:??:?? 3 SPI.begin(SCK=9, MISO=11, MOSI=10, NSS=8)
+DEBUG | ??:??:?? 3 Use compiled/slipstreamed tzplaceholder                                         
+DEBUG | ??:??:?? 3 Saved TZ: GMT-3 
+DEBUG | ??:??:?? 3 Set Timezone to GMT-3
+DEBUG | ??:??:?? 3 Read RTC time as 1780335707
+INFO  | ??:??:?? 3 GPS power state move from OFF to ACTIVE
+DEBUG | ??:??:?? 3 Use GPIO39 for GPS RX
+DEBUG | ??:??:?? 3 Use GPIO38 for GPS TX
+DEBUG | ??:??:?? 3 Start multicast thread
+INFO  | ??:??:?? 3 Position: restored lastGpsSend from transmit history
+[  3487][E][vfs_api.cpp:105] open(): /littlefs/prefs/cannedConf.proto does not exist, no permits for creation
+ERROR | ??:??:?? 3 Could not open / read /prefs/cannedConf.proto
+INFO  | ??:??:?? 3 CannedMessageModule is enabled
+INFO  | ??:??:?? 3 External Notification Module Disabled
+INFO  | ??:??:?? 3 Air Quality Telemetry adding I2C devices...
+INFO  | ??:??:?? 3 Init sensor: SEN5X
+INFO  | ??:??:?? 3 SEN5X: found sensor model SEN55
+INFO  | ??:??:?? 3 SEN5X Firmware Version: 2.00
+INFO  | ??:??:?? 3 SEN5X Hardware Version: 0.00
+INFO  | ??:??:?? 3 SEN5X Protocol Version: 0.00
+INFO  | ??:??:?? 4 SEN5X state read from /prefs/sen5X.dat
+INFO  | ??:??:?? 4 SEN5X: Not enough RTCQuality, ignoring saved cleaning and VOC state
+INFO  | ??:??:?? 4 SEN5X: One shot mode enabled
+INFO  | ??:??:?? 4 SEN5X: Switch to RHT/Gas only measurement mode
+INFO  | ??:??:?? 4 Opened SEN5X sensor on i2c bus
+DEBUG | ??:??:?? 4 Rescan for I2C keyboard
+DEBUG | ??:??:?? 4 Scan for I2C devices on port 2
+DEBUG | ??:??:?? 4 Scan address 0x1f
+DEBUG | ??:??:?? 4 Scan address 0x34
+DEBUG | ??:??:?? 4 Scan address 0x55
+DEBUG | ??:??:?? 4 Scan address 0x5a
+DEBUG | ??:??:?? 4 Scan address 0x5f
+DEBUG | ??:??:?? 4 Scan for I2C devices on port 1
+DEBUG | ??:??:?? 4 Scan address 0x1f
+DEBUG | ??:??:?? 4 Scan address 0x34
+DEBUG | ??:??:?? 4 Scan address 0x55
+DEBUG | ??:??:?? 4 Scan address 0x5a
+DEBUG | ??:??:?? 4 Scan address 0x5f
+DEBUG | ??:??:?? 4 SX126xInterface(cs=8, irq=14, rst=12, busy=13)
+DEBUG | ??:??:?? 4 SX126X_DIO3_TCXO_VOLTAGE defined, using DIO3 as TCXO reference voltage at 1.800000 V
+INFO  | ??:??:?? 4 Start meshradio init
+INFO  | ??:??:?? 4 Radio freq=869.525, config.lora.frequency_offset=0.000
+INFO  | ??:??:?? 4 Set radio: region=EU_868, name=LongFast, config=0, ch=0, power=27
+INFO  | ??:??:?? 4 newRegion->freqStart -> newRegion->freqEnd: 869.400024 -> 869.650024 (0.250000 MHz)
+INFO  | ??:??:?? 4 numFreqSlots: 1 x 250.000kHz
+INFO  | ??:??:?? 4 channel_num: 1
+INFO  | ??:??:?? 4 frequency: 869.525024
+INFO  | ??:??:?? 4 Slot time: 28 msec, preamble time: 131 msec
+INFO  | ??:??:?? 4 Requested Tx power: 27 dBm; Device LoRa Tx gain: 9 dB
+INFO  | ??:??:?? 4 Final Tx power: 18 dBm
+INFO  | ??:??:?? 4 SX126x init result 0
+INFO  | ??:??:?? 4 Frequency set to 869.525024
+INFO  | ??:??:?? 4 Bandwidth set to 250.000000
+INFO  | ??:??:?? 4 Power output set to 18
+DEBUG | ??:??:?? 4 Current limit set to 140.000000
+DEBUG | ??:??:?? 4 Current limit set result 0
+DEBUG | ??:??:?? 4 Set DIO2 as RF switch, result: 0
+DEBUG | ??:??:?? 4 SX126X_RXEN not defined, defaulting to RADIOLIB_NC
+DEBUG | ??:??:?? 4 SX126X_TXEN not defined, defaulting to RADIOLIB_NC
+DEBUG | ??:??:?? 4 Use MCU pin -1 as RXEN and pin -1 as TXEN to control RF switching
+INFO  | ??:??:?? 4 Set RX gain to boosted mode; result: 0
+INFO  | ??:??:?? 4 Applied SX1262 register 0x8B5 patch for RX improvement
+INFO  | ??:??:?? 4 SX1262 init success
+INFO  | ??:??:?? 4 Not using WIFI
+DEBUG | ??:??:?? 4 LoRA bitrate = 116.967873 bytes / sec
+INFO  | ??:??:?? 4 PowerFSM init, USB power=0
+[  4454][D][esp32-hal-cpu.c:244] setCpuFrequencyMhz(): PLL: 480 / 6 = 80 Mhz, APB: 80000000 Hz
+DEBUG | ??:??:?? 4 Free heap  :  216988 bytes
+DEBUG | ??:??:?? 4 Free PSRAM : 2028267 bytes
+DEBUG | ??:??:?? 4 Node status update: 0 online, 14 total
+DEBUG | ??:??:?? 5 [GPS] Trying $PCAS06,0*1B (L76K)...
+WARN  | ??:??:?? 5 [GPS] Give up on fast L76K GPS probe and set to 9600
+INFO  | ??:??:?? 7 [PowerFSM] Init the NimBLE bluetooth module
+INFO  | ??:??:?? 13 [AirQualityTelemetry] Air quality Telemetry: First call of runOnce, doing setup
+INFO  | ??:??:?? 13 [AirQualityTelemetry] Air quality Telemetry: init
+INFO  | ??:??:?? 33 [NodeInfo] Send our nodeinfo to mesh (wantReplies=0)
+DEBUG | ??:??:?? 33 [NodeInfo] Skip send NodeInfo since we sent it <600s ago
+INFO  | ??:??:?? 53 [AirQualityTelemetry] Air quality Telemetry: Subsequent call of runOnce
+INFO  | ??:??:?? 53 [AirQualityTelemetry] Waking up sensors...
+DEBUG | ??:??:?? 53 [AirQualityTelemetry] SEN5X condition check: lastTelemetry=3464, wakeUpTime=30000, interval=120000, timeSince=0, isWithin=true, timeOk=true, channelUtil=true, airUtil=true
+DEBUG | ??:??:?? 53 [AirQualityTelemetry] Waking up: SEN5X
+DEBUG | ??:??:?? 53 [AirQualityTelemetry] SEN5X: Waking up sensor
+INFO  | ??:??:?? 53 [AirQualityTelemetry] SEN5X: Started measurement mode
+DEBUG | ??:??:?? 60 SX126x AGC reset: warm sleep + Calibrate(0x7F)
+INFO  | ??:??:?? 63 [DeviceTelemetry] Send: air_util_tx=0.000000, channel_utilization=0.000000, battery_level=88, voltage=4.040000, uptime=63
+DEBUG | ??:??:?? 63 [DeviceTelemetry] Initial packet id 1381938619
+DEBUG | ??:??:?? 63 [DeviceTelemetry] Partially randomized packet id 1778031036
+DEBUG | ??:??:?? 63 [DeviceTelemetry] updateTelemetry LOCAL
+DEBUG | ??:??:?? 63 [DeviceTelemetry] Node status update: 0 online, 14 total
+INFO  | ??:??:?? 63 [DeviceTelemetry] Send packet to phone
+INFO  | ??:??:?? 63 [DeviceTelemetry] Sending local stats: uptime=63, channel_utilization=0.000000, air_util_tx=0.000000, num_online_nodes=0, num_total_nodes=14
+INFO  | ??:??:?? 63 [DeviceTelemetry] num_packets_tx=0, num_packets_rx=0, num_packets_rx_bad=0
+DEBUG | ??:??:?? 63 [DeviceTelemetry] Partially randomized packet id 3266056637
+DEBUG | ??:??:?? 64 [Power] Battery: usbPower=0, isCharging=0, batMv=4042, batPct=88
+INFO  | ??:??:?? 68 [AirQualityTelemetry] Air quality Telemetry: Subsequent call of runOnce
+INFO  | ??:??:?? 68 [AirQualityTelemetry] Waking up sensors...
+DEBUG | ??:??:?? 68 [AirQualityTelemetry] SEN5X condition check: lastTelemetry=3464, wakeUpTime=30000, interval=120000, timeSince=0, isWithin=true, timeOk=true, channelUtil=true, airUtil=true
+DEBUG | ??:??:?? 68 [AirQualityTelemetry] SEN5X: Since measure started: 15000ms
+DEBUG | ??:??:?? 68 [AirQualityTelemetry] SEN5X: Reading PN Values
+DEBUG | ??:??:?? 68 [AirQualityTelemetry] Got SEN5X readings: pN0p5=3600, pN1p0=4100, pN2p5=4100, pN4p0=4100, pN10p0=4100, tSize=0.46
+INFO  | ??:??:?? 68 [AirQualityTelemetry] SEN5X: Concentration is low, we will ask again in the second warm up period
+DEBUG | ??:??:?? 68 [AirQualityTelemetry] SEN5X. Pending for ready 15000ms
+INFO  | ??:??:?? 83 [AirQualityTelemetry] Air quality Telemetry: Subsequent call of runOnce
+INFO  | ??:??:?? 83 [AirQualityTelemetry] Waking up sensors...
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] SEN5X condition check: lastTelemetry=3464, wakeUpTime=30000, interval=120000, timeSince=0, isWithin=true, timeOk=true, channelUtil=true, airUtil=true
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] SEN5X: Since measure started: 30000ms
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] SEN5X. Pending for ready 0ms
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Reading SEN5X
+INFO  | ??:??:?? 83 [AirQualityTelemetry] SEN5X: Attempting to get metrics
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] SEN5X: Reading PM Values
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Got SEN5X readings: pM1p0=6, pM2p5=6, pM4p0=6, pM10p0=6
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Got SEN5X readings: humidity=34.97, temperature=28.50, vocIndex=66.00
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Got SEN5X readings: noxIndex=1.00
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] SEN5X: Reading PN Values
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Got SEN5X readings: pN0p5=4200, pN1p0=600, pN2p5=0, pN4p0=0, pN10p0=0, tSize=0.45
+INFO  | ??:??:?? 83 [AirQualityTelemetry] SEN5X model: not SEN50
+INFO  | ??:??:?? 83 [AirQualityTelemetry] SEN5X: Adding humidity to metrics
+INFO  | ??:??:?? 83 [AirQualityTelemetry] SEN5X: Adding temperature to metrics
+INFO  | ??:??:?? 83 [AirQualityTelemetry] SEN5X model: SEN55
+INFO  | ??:??:?? 83 [AirQualityTelemetry] Send: pm10_standard=6, pm25_standard=6, pm100_standard=6
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Partially randomized packet id 2907114942
+INFO  | ??:??:?? 83 [AirQualityTelemetry] Sending packet to mesh
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Ignore update from self
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] handleReceived(LOCAL) (id=0xad470dbe fr=0x699be2a4 to=0xffffffff, transport = 0, WantAck=0, HopLim=3 Ch=0x0 Portnum=67 priority=70)
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] No modules interested in portnum=67, src=LOCAL
+INFO  | ??:??:?? 83 [AirQualityTelemetry] Packet History - insert: Using new slot @uptime 83.945s TRACE NEW
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Expand short PSK #1
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Use AES128 key!
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] enqueue for send (id=0xad470dbe fr=0x699be2a4 to=0xffffffff, transport = 0, WantAck=0, HopLim=3 Ch=0x8 encrypted len=90 hopStart=3 relay=0xa4 priority=70)
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] txGood=0,txRelay=0,rxGood=0,rxBad=0
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Use channel 0 (hash 0x8)
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Expand short PSK #1
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] Use AES128 key!
+DEBUG | ??:??:?? 83 [AirQualityTelemetry] decoded message (id=0xad470dbe fr=0x699be2a4 to=0xffffffff, transport = 0, WantAck=0, HopLim=3 Ch=0x0 Portnum=67 hopStart=3 relay=0xa4 priority=70)
+DEBUG | ??:??:?? 84 [AirQualityTelemetry] Send client notification to phone
+DEBUG | ??:??:?? 84 [AirQualityTelemetry] Start next execution in 5s, then sleep
+DEBUG | ??:??:?? 84 [AirQualityTelemetry] TransmitHistory: saved 4 entries to disk
+DEBUG | ??:??:?? 84 [AirQualityTelemetry] Sending sensors to sleep
+DEBUG | ??:??:?? 84 [AirQualityTelemetry] Disabling SEN5X until next period
+INFO  | ??:??:?? 84 [AirQualityTelemetry] SEN5X: Getting VOC state from sensor
+DEBUG | ??:??:?? 84 [AirQualityTelemetry] SEN5X: VOC state retrieved from sensor: [46, 210, 160, 198, 0, 49, 253, 171]
+DEBUG | ??:??:?? 84 [AirQualityTelemetry] SEN5X: VOC state is valid
+DEBUG | ??:??:?? 84 [AirQualityTelemetry] sinceFirstMeasureStarted: 1780335787s
+DEBUG | ??:??:?? 84 [AirQualityTelemetry] Opening /prefs/sen5X.dat, fullAtomic=0
+INFO  | ??:??:?? 84 [AirQualityTelemetry] SEN5X: state write to /prefs/sen5X.dat
+INFO  | ??:??:?? 85 [AirQualityTelemetry] SEN5X: state write to /prefs/sen5X.dat successful
+INFO  | ??:??:?? 85 [AirQualityTelemetry] SEN5X: One shot mode enabled
+INFO  | ??:??:?? 85 [AirQualityTelemetry] SEN5X: Switch to RHT/Gas only measurement mode
+DEBUG | ??:??:?? 85 [RadioIf] Started Tx (id=0xad470dbe fr=0x699be2a4 to=0xffffffff, transport = 0, WantAck=0, HopLim=3 Ch=0x8 encrypted len=90 hopStart=3 relay=0xa4 priority=70)
+DEBUG | ??:??:?? 85 [RadioIf] 0 packets remain in the TX queue
+DEBUG | ??:??:?? 86 [RadioIf] Packet TX: 927ms
+DEBUG | ??:??:?? 86 [RadioIf] Completed sending (id=0xad470dbe fr=0x699be2a4 to=0xffffffff, transport = 0, WantAck=0, HopLim=3 Ch=0x8 encrypted len=90 hopStart=3 relay=0xa4 priority=70)
+DEBUG | ??:??:?? 86 [AirQualityTelemetry] Sleeping for 120000ms, then awaking to send metrics again.
+INFO  | ??:??:?? 86 [AirQualityTelemetry] Enter deep sleep for 120 seconds
+INFO  | ??:??:?? 86 [AirQualityTelemetry] Disable bluetooth until reboot
+DEBUG | ??:??:?? 86 [AirQualityTelemetry] SX126x entering sleep mode
+DEBUG | ??:??:?? 86 [AirQualityTelemetry] Save to disk 31
+DEBUG | ??:??:?? 86 [AirQualityTelemetry] Opening /prefs/config.proto, fullAtomic=1
+INFO  | ??:??:?? 86 [AirQualityTelemetry] Save /prefs/config.proto
+DEBUG | ??:??:?? 86 [AirQualityTelemetry] Opening /prefs/module.proto, fullAtomic=1
+INFO  | ??:??:?? 86 [AirQualityTelemetry] Save /prefs/module.proto
+DEBUG | ??:??:?? 86 [AirQualityTelemetry] Opening /prefs/channels.proto, fullAtomic=1
+INFO  | ??:??:?? 86 [AirQualityTelemetry] Save /prefs/channels.proto
+DEBUG | ??:??:?? 87 [AirQualityTelemetry] Opening /prefs/device.proto, fullAtomic=1
+INFO  | ??:??:?? 87 [AirQualityTelemetry] Save /prefs/device.proto
+DEBUG | ??:??:?? 88 [AirQualityTelemetry] Opening /prefs/nodes.proto, fullAtomic=0
+INFO  | ??:??:?? 88 [AirQualityTelemetry] Save /prefs/nodes.proto
+E (88627) RTCIO: rtc_gpio_isolate(171): RTCIO number error
+E (88627) RTCIO: rtc_gpio_isolate(171): RTCIO number error
+E (88628) RTCIO: rtc_gpio_isolate(171): RTCIO number error
+
+
+
 SDS'ten uyandıktan sonra ilk AirQuality gönderimi 3dk sürüyor.
 AirQuality'de 120sn uyuyacak dememize rağmen, Power ayarlarındaki 5dk SDS uyku süresini işletiyor.
 

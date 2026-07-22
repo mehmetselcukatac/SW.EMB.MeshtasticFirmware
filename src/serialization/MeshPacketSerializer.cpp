@@ -231,6 +231,15 @@ std::string MeshPacketSerializer::JsonSerialize(const meshtastic_MeshPacket *mp,
                     if (decoded->variant.air_quality_metrics.has_voltage) {
                         msgPayload["voltage"] = new JSONValue(decoded->variant.air_quality_metrics.voltage);
                     }
+                    if (decoded->variant.air_quality_metrics.has_latitude_i) {
+                        msgPayload["latitude_i"] = new JSONValue((int)decoded->variant.air_quality_metrics.latitude_i);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_longitude_i) {
+                        msgPayload["longitude_i"] = new JSONValue((int)decoded->variant.air_quality_metrics.longitude_i);
+                    }
+                    if (decoded->variant.air_quality_metrics.has_altitude) {
+                        msgPayload["altitude"] = new JSONValue((int)decoded->variant.air_quality_metrics.altitude);
+                    }
                 } else if (decoded->which_variant == meshtastic_Telemetry_power_metrics_tag) {
                     if (decoded->variant.power_metrics.has_ch1_voltage) {
                         msgPayload["voltage_ch1"] = new JSONValue(decoded->variant.power_metrics.ch1_voltage);

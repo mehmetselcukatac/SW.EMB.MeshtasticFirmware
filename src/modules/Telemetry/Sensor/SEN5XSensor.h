@@ -9,11 +9,13 @@
 
 // Warm up times for SEN5X from the datasheet
 #ifndef SEN5X_WARMUP_MS_1
-#define SEN5X_WARMUP_MS_1 15000
+#define SEN5X_WARMUP_MS_1 15000 // Original value
+// #define SEN5X_WARMUP_MS_1 2000 // For testing, we will set this to short duration to not have to wait too long
 #endif
 
 #ifndef SEN5X_WARMUP_MS_2
-#define SEN5X_WARMUP_MS_2 30000
+#define SEN5X_WARMUP_MS_2 30000 // Original value
+//#define SEN5X_WARMUP_MS_2 10000 // For testing, we will set this to short duration to not have to wait too long
 #endif
 
 #ifndef SEN5X_POLL_INTERVAL

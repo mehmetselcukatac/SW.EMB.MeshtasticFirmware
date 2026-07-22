@@ -193,6 +193,27 @@ static size_t encode_telemetry_environment_metrics(uint8_t *buffer, size_t buffe
     return stream.bytes_written;
 }
 
+// Helper function to create and encode air quality metrics with location fields
+static size_t encode_telemetry_air_quality_metrics(uint8_t *buffer, size_t buffer_size)
+{
+    meshtastic_Telemetry telemetry = meshtastic_Telemetry_init_zero;
+    telemetry.time = 1609459200;
+    telemetry.which_variant = meshtastic_Telemetry_air_quality_metrics_tag;
+
+    telemetry.variant.air_quality_metrics.pm25_standard = 42;
+    telemetry.variant.air_quality_metrics.has_pm25_standard = true;
+    telemetry.variant.air_quality_metrics.latitude_i = 12345678;
+    telemetry.variant.air_quality_metrics.has_latitude_i = true;
+    telemetry.variant.air_quality_metrics.longitude_i = -98765432;
+    telemetry.variant.air_quality_metrics.has_longitude_i = true;
+    telemetry.variant.air_quality_metrics.altitude = 123;
+    telemetry.variant.air_quality_metrics.has_altitude = true;
+
+    pb_ostream_t stream = pb_ostream_from_buffer(buffer, buffer_size);
+    pb_encode(&stream, &meshtastic_Telemetry_msg, &telemetry);
+    return stream.bytes_written;
+}
+
 // Test TELEMETRY_APP port with device metrics
 void test_telemetry_device_metrics_serialization()
 {
@@ -235,6 +256,42 @@ void test_telemetry_device_metrics_serialization()
 
     // Note: JSON serialization may not preserve exact 2-decimal formatting due to float precision
     // We verify the numeric values are correct within tolerance
+
+    delete root;
+}
+
+// Test that air quality telemetry preserves location fields in JSON
+void test_telemetry_air_quality_metrics_serialization()
+{
+    uint8_t buffer[256];
+    size_t payload_size = encode_telemetry_air_quality_metrics(buffer, sizeof(buffer));
+
+    meshtastic_MeshPacket packet = create_test_packet(meshtastic_PortNum_TELEMETRY_APP, buffer, payload_size);
+
+    std::string json = MeshPacketSerializer::JsonSerialize(&packet, false);
+    TEST_ASSERT_TRUE(json.length() > 0);
+
+    JSONValue *root = JSON::Parse(json.c_str());
+    TEST_ASSERT_NOT_NULL(root);
+    TEST_ASSERT_TRUE(root->IsObject());
+
+    JSONObject jsonObj = root->AsObject();
+    TEST_ASSERT_TRUE(jsonObj.find("payload") != jsonObj.end());
+    TEST_ASSERT_TRUE(jsonObj["payload"]->IsObject());
+
+    JSONObject payload = jsonObj["payload"]->AsObject();
+
+    TEST_ASSERT_TRUE(payload.find("pm25") != payload.end());
+    TEST_ASSERT_EQUAL(42, (int)payload["pm25"]->AsNumber());
+
+    TEST_ASSERT_TRUE(payload.find("latitude_i") != payload.end());
+    TEST_ASSERT_EQUAL(12345678, (int)payload["latitude_i"]->AsNumber());
+
+    TEST_ASSERT_TRUE(payload.find("longitude_i") != payload.end());
+    TEST_ASSERT_EQUAL(-98765432, (int)payload["longitude_i"]->AsNumber());
+
+    TEST_ASSERT_TRUE(payload.find("altitude") != payload.end());
+    TEST_ASSERT_EQUAL(123, (int)payload["altitude"]->AsNumber());
 
     delete root;
 }

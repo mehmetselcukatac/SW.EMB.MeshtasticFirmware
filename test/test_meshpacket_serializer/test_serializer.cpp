@@ -17,6 +17,7 @@ void test_telemetry_environment_metrics_comprehensive();
 void test_telemetry_environment_metrics_missing_fields();
 void test_telemetry_environment_metrics_complete_coverage();
 void test_telemetry_environment_metrics_unset_fields();
+void test_telemetry_air_quality_metrics_serialization();
 void test_encrypted_packet_serialization();
 void test_empty_encrypted_packet();
 
@@ -47,6 +48,7 @@ void setup()
     RUN_TEST(test_telemetry_environment_metrics_missing_fields);
     RUN_TEST(test_telemetry_environment_metrics_complete_coverage);
     RUN_TEST(test_telemetry_environment_metrics_unset_fields);
+    RUN_TEST(test_telemetry_air_quality_metrics_serialization);
 
     // Encrypted packet test
     RUN_TEST(test_encrypted_packet_serialization);
