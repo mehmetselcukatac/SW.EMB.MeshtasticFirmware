@@ -238,6 +238,8 @@ bool SEN5XSensor::idle(bool checkState)
             if (!(vocStateStable() && vocValid)) {
                 LOG_INFO("%s: Not stopping measurement, vocState is not stable yet!", sensorName);
                 return true;
+            } else {
+                LOG_INFO("%s: vocState should be stable now!", sensorName);
             }
         }
         // Save state and prefs (on all models)
@@ -574,7 +576,8 @@ bool SEN5XSensor::initDevice(TwoWire *bus, ScanI2C::FoundDevice *dev)
     // Check if it is time to do a cleaning
     uint32_t now;
     int32_t passed = 0;
-    now = getValidTime(RTCQuality::RTCQualityDevice);
+    // now = getValidTime(RTCQuality::RTCQualityDevice);
+    now = getValidTime(RTCQuality::RTCQualityNone);
 
     // If time is not RTCQualityNone, it will return non-zero
     if (now) {
@@ -606,7 +609,8 @@ bool SEN5XSensor::initDevice(TwoWire *bus, ScanI2C::FoundDevice *dev)
                 LOG_INFO("SEN5X: No valid VOC's state found");
             } else {
                 // Check if state is recent
-                if (vocStateRecent(now)) {
+//                if (vocStateRecent(now)) {
+                if (true) {
                     // If current date greater than 01/01/2018 (validity check)
                     // Send it to the sensor
                     LOG_INFO("SEN5X: VOC state is valid and recent");

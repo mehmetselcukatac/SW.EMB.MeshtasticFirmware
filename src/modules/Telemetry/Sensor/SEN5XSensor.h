@@ -37,7 +37,8 @@ Sensirion recommends 1h
 This can be bypassed completely if switching to low-power RHT/Gas mode and setting
 SEN5X_VOC_STATE_WARMUP_S 0
 */
-#define SEN5X_VOC_STATE_WARMUP_S 3600
+// #define SEN5X_VOC_STATE_WARMUP_S 3600 // 6 hours for most accurate NOx results according to datasheet. But 60s until reliably detecting events
+#define SEN5X_VOC_STATE_WARMUP_S 60
 #endif
 
 #define ONE_WEEK_IN_SECONDS 604800
@@ -87,7 +88,8 @@ class SEN5XSensor : public TelemetrySensor
 #define SEN5X_READ_PM_VALUES 0x0413
 
 #define SEN5X_VOC_VALID_TIME 600
-#define SEN5X_VOC_VALID_DATE 1514764800
+// #define SEN5X_VOC_VALID_DATE 1514764800
+#define SEN5X_VOC_VALID_DATE 0 // Güvenilir zaman bilgisi olmadan SEN55'i işletebilmek için belli bir yılın ötesinde olma kontrolünü devre dışı bırakıyoruz. Bu sayede RTC yokken de SEN55'i çalıştırabiliyoruz.
 
     enum SEN5Xmodel { SEN5X_UNKNOWN = 0, SEN50 = 0b001, SEN54 = 0b010, SEN55 = 0b100 };
     SEN5Xmodel model = SEN5X_UNKNOWN;

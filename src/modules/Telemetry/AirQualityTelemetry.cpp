@@ -71,6 +71,9 @@ void AirQualityTelemetryModule::i2cScanFinished(ScanI2C *i2cScanner)
 
 int32_t AirQualityTelemetryModule::runOnce()
 {
+    // İstediğimiz ölçümü henüz alamadıysak sensörleri uykuya yatırmayacağız. Zaten SEN55 VOC stabilizasyonu için uzun bekliyoruz. Uykuya yatırmak bunu iyice sabote edebilir.
+    bool allowSleep = false;
+
     moduleConfig.telemetry.air_quality_enabled = 1;
     moduleConfig.telemetry.air_quality_screen_enabled = 1;
     //moduleConfig.telemetry.air_quality_interval = 830; // Kullanıcı ayarından bağımsız olarak kodda her 15 dakikada bir ölçüm yapacak şekilde ayarladık.
@@ -172,9 +175,14 @@ int32_t AirQualityTelemetryModule::runOnce()
                                                               default_telemetry_broadcast_interval_secs, numOnlineNodes))) &&
             airTime->isTxAllowedChannelUtil(config.device.role != meshtastic_Config_DeviceConfig_Role_SENSOR) &&
             airTime->isTxAllowedAirUtil()) {
-            sendTelemetry();
-            if (transmitHistory)
+
+            //sendTelemetry();
+
+            // Transmithistory'yi sadece gerçekten veri gönderimi yapılırsa güncelle.
+            if (sendTelemetry() && transmitHistory) {
+                allowSleep = true;
                 transmitHistory->setLastSentToMesh(TX_HISTORY_KEY_AIR_QUALITY_TELEMETRY);
+            }
         } else if (((lastSentToPhone == 0) || !Throttle::isWithinTimespanMs(lastSentToPhone, sendToPhoneIntervalMs)) &&
                    (service->isToPhoneQueueEmpty())) {
             // Just send to phone when it's not our time to send to mesh yet
@@ -184,18 +192,22 @@ int32_t AirQualityTelemetryModule::runOnce()
         }
 
         // Send to sleep sensors that consume power
-        LOG_DEBUG("Sending sensors to sleep");
-        for (TelemetrySensor *sensor : sensors) {
-            if (sensor->isActive() && sensor->canSleep()) {
-                if (sensor->wakeUpTimeMs() <
-                    (int32_t)Default::getConfiguredOrDefaultMsScaled(moduleConfig.telemetry.air_quality_interval,
-                                                                     default_telemetry_broadcast_interval_secs, numOnlineNodes)) {
-                    LOG_DEBUG("Disabling %s until next period", sensor->sensorName);
-                    sensor->sleep();
-                } else {
-                    LOG_DEBUG("Sensor stays enabled due to warm up period");
+        if (allowSleep) {
+            LOG_DEBUG("Sending sensors to sleep");
+            for (TelemetrySensor *sensor : sensors) {
+                if (sensor->isActive() && sensor->canSleep()) {
+                    if (sensor->wakeUpTimeMs() <
+                        (int32_t)Default::getConfiguredOrDefaultMsScaled(moduleConfig.telemetry.air_quality_interval,
+                                                                        default_telemetry_broadcast_interval_secs, numOnlineNodes)) {
+                        LOG_DEBUG("Disabling %s until next period", sensor->sensorName);
+                        sensor->sleep();
+                    } else {
+                        LOG_DEBUG("Sensor stays enabled due to warm up period");
+                    }
                 }
             }
+        } else {
+            LOG_DEBUG("Not sending sensors to sleep because no telemetry was sent");
         }
 
         // Bu aşamada cihazı hızla uyutmak istiyoruz. Bu yüzden bir sonraki runOnce çalışmasını 1sn sonra yaptıracağız ve uykuya dalması gerekiyor.
@@ -429,72 +441,76 @@ bool AirQualityTelemetryModule::sendTelemetry(NodeNum dest, bool phoneOnly)
     m.time = getTime();
 
     if (getAirQualityTelemetry(&m)) {
+        if (m.variant.air_quality_metrics.has_pm_voc_idx && m.variant.air_quality_metrics.pm_voc_idx > 0) {
+            bool hasAnyPM =
+                m.variant.air_quality_metrics.has_pm10_standard || m.variant.air_quality_metrics.has_pm25_standard ||
+                m.variant.air_quality_metrics.has_pm100_standard || m.variant.air_quality_metrics.has_pm10_environmental ||
+                m.variant.air_quality_metrics.has_pm25_environmental || m.variant.air_quality_metrics.has_pm100_environmental;
 
-        bool hasAnyPM =
-            m.variant.air_quality_metrics.has_pm10_standard || m.variant.air_quality_metrics.has_pm25_standard ||
-            m.variant.air_quality_metrics.has_pm100_standard || m.variant.air_quality_metrics.has_pm10_environmental ||
-            m.variant.air_quality_metrics.has_pm25_environmental || m.variant.air_quality_metrics.has_pm100_environmental;
-
-        if (hasAnyPM) {
-            LOG_INFO("Send: pm10_standard=%u, pm25_standard=%u, pm100_standard=%u", m.variant.air_quality_metrics.pm10_standard,
-                     m.variant.air_quality_metrics.pm25_standard, m.variant.air_quality_metrics.pm100_standard);
-            if (m.variant.air_quality_metrics.has_pm10_environmental)
-                LOG_INFO("pm10_environmental=%u, pm25_environmental=%u, pm100_environmental=%u",
-                         m.variant.air_quality_metrics.pm10_environmental, m.variant.air_quality_metrics.pm25_environmental,
-                         m.variant.air_quality_metrics.pm100_environmental);
-        }
-
-        bool hasAnyCO2 = m.variant.air_quality_metrics.has_co2 || m.variant.air_quality_metrics.has_co2_temperature ||
-                         m.variant.air_quality_metrics.has_co2_humidity;
-
-        if (hasAnyCO2) {
-            LOG_INFO("Send: co2=%i, co2_t=%.2f, co2_rh=%.2f", m.variant.air_quality_metrics.co2,
-                     m.variant.air_quality_metrics.co2_temperature, m.variant.air_quality_metrics.co2_humidity);
-        }
-
-        bool hasAnyHCHO = m.variant.air_quality_metrics.has_form_formaldehyde ||
-                          m.variant.air_quality_metrics.has_form_temperature || m.variant.air_quality_metrics.has_form_humidity;
-
-        if (hasAnyHCHO) {
-            LOG_INFO("Send: hcho=%.2f, hcho_t=%.2f, hcho_rh=%.2f", m.variant.air_quality_metrics.form_formaldehyde,
-                     m.variant.air_quality_metrics.form_temperature, m.variant.air_quality_metrics.form_humidity);
-        }
-
-        meshtastic_MeshPacket *p = allocDataProtobuf(m);
-        p->to = dest;
-        p->decoded.want_response = false;
-        if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR)
-            p->priority = meshtastic_MeshPacket_Priority_RELIABLE;
-        else
-            p->priority = meshtastic_MeshPacket_Priority_BACKGROUND;
-
-        // release previous packet before occupying a new spot
-        if (lastMeasurementPacket != nullptr)
-            packetPool.release(lastMeasurementPacket);
-
-        lastMeasurementPacket = packetPool.allocCopy(*p);
-        if (phoneOnly) {
-            LOG_INFO("Sending packet to phone");
-            service->sendToPhone(p);
-        } else {
-            LOG_INFO("Sending packet to mesh");
-            service->sendToMesh(p, RX_SRC_LOCAL, true);
-
-            if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR && config.power.is_power_saving) {
-                meshtastic_ClientNotification *notification = clientNotificationPool.allocZeroed();
-                notification->level = meshtastic_LogRecord_Level_INFO;
-                notification->time = getValidTime(RTCQualityFromNet);
-                sprintf(notification->message, "Sending telemetry and sleeping for %us interval in a moment",
-                        Default::getConfiguredOrDefaultMs(moduleConfig.telemetry.air_quality_interval,
-                                                          default_telemetry_broadcast_interval_secs) /
-                            1000U);
-                service->sendClientNotification(notification);
-                sleepOnNextExecution = true;
-                LOG_DEBUG("Start next execution in 5s, then sleep");
-                setIntervalFromNow(FIVE_SECONDS_MS);
+            if (hasAnyPM) {
+                LOG_INFO("Send: pm10_standard=%u, pm25_standard=%u, pm100_standard=%u", m.variant.air_quality_metrics.pm10_standard,
+                        m.variant.air_quality_metrics.pm25_standard, m.variant.air_quality_metrics.pm100_standard);
+                if (m.variant.air_quality_metrics.has_pm10_environmental)
+                    LOG_INFO("pm10_environmental=%u, pm25_environmental=%u, pm100_environmental=%u",
+                            m.variant.air_quality_metrics.pm10_environmental, m.variant.air_quality_metrics.pm25_environmental,
+                            m.variant.air_quality_metrics.pm100_environmental);
             }
+
+            bool hasAnyCO2 = m.variant.air_quality_metrics.has_co2 || m.variant.air_quality_metrics.has_co2_temperature ||
+                            m.variant.air_quality_metrics.has_co2_humidity;
+
+            if (hasAnyCO2) {
+                LOG_INFO("Send: co2=%i, co2_t=%.2f, co2_rh=%.2f", m.variant.air_quality_metrics.co2,
+                        m.variant.air_quality_metrics.co2_temperature, m.variant.air_quality_metrics.co2_humidity);
+            }
+
+            bool hasAnyHCHO = m.variant.air_quality_metrics.has_form_formaldehyde ||
+                            m.variant.air_quality_metrics.has_form_temperature || m.variant.air_quality_metrics.has_form_humidity;
+
+            if (hasAnyHCHO) {
+                LOG_INFO("Send: hcho=%.2f, hcho_t=%.2f, hcho_rh=%.2f", m.variant.air_quality_metrics.form_formaldehyde,
+                        m.variant.air_quality_metrics.form_temperature, m.variant.air_quality_metrics.form_humidity);
+            }
+
+            meshtastic_MeshPacket *p = allocDataProtobuf(m);
+            p->to = dest;
+            p->decoded.want_response = false;
+            if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR)
+                p->priority = meshtastic_MeshPacket_Priority_RELIABLE;
+            else
+                p->priority = meshtastic_MeshPacket_Priority_BACKGROUND;
+
+            // release previous packet before occupying a new spot
+            if (lastMeasurementPacket != nullptr)
+                packetPool.release(lastMeasurementPacket);
+
+            lastMeasurementPacket = packetPool.allocCopy(*p);
+            if (phoneOnly) {
+                LOG_INFO("Sending packet to phone");
+                service->sendToPhone(p);
+            } else {
+                LOG_INFO("Sending packet to mesh");
+                service->sendToMesh(p, RX_SRC_LOCAL, true);
+
+                if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR && config.power.is_power_saving) {
+                    meshtastic_ClientNotification *notification = clientNotificationPool.allocZeroed();
+                    notification->level = meshtastic_LogRecord_Level_INFO;
+                    notification->time = getValidTime(RTCQualityFromNet);
+                    sprintf(notification->message, "Sending telemetry and sleeping for %us interval in a moment",
+                            Default::getConfiguredOrDefaultMs(moduleConfig.telemetry.air_quality_interval,
+                                                            default_telemetry_broadcast_interval_secs) /
+                                1000U);
+                    service->sendClientNotification(notification);
+                    sleepOnNextExecution = true;
+                    LOG_DEBUG("Start next execution in 5s, then sleep");
+                    setIntervalFromNow(FIVE_SECONDS_MS);
+                }
+            }
+            return true;
+        } else {
+            LOG_WARN("Invalid VOC index, not sending telemetry");
+            return false;
         }
-        return true;
     }
     return false;
 }
