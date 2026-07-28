@@ -1,0 +1,8 @@
+Şu anki firmware kodu ile cihazım SENSOR modunda oldukça uzun süre SDS uykusunda kalıp (örneğin 10 dakika) sonra uyanıp, SEN55 sensörden AirQuality ölçümleri alıp merkeze iletiyor.
+Şimdi bazı AirQuality değerlerinde bir artış meydana geldiğinde, belli bir kez [FREQUENT_MONITORING_CYCLES] cihazı SDS'e sokmadan sık ölçüm [FREQUENT_MONITORING_CYCLE_SEC] ve iletim düzeni işletmek istiyorum.
+Sonrasında da cihaz normal tasarruflu çalışma düzenine geri dönsün istiyorum.
+Bu FREQUENT_MONITORING moduna geçiş kararı verebilmek için kendimiz belirleyebileceğimiz belli AirQuality değişkenleri için (tüm değişkenler değil, koddan parametrik olarak esnek değiştirebilelim.)
+Önceki belli adet [MOVING_WINDOW_MEASUREMENT_SAMPLE_COUNT] ölçüm değerlerini flash bellekte bir dosyada veya kaydedeceğimiz her bir değişken için ayrı birer dosyada saklayalım.
+Her bir yeni ölçümde FIFO mantıkla en eski değer unutulsun, yeni değer eklensin ve bu sayede en son [MOVING_WINDOW_MEASUREMENT_SAMPLE_COUNT] adet örnek kayıtlı olsun.
+Takip ettiğimiz her değişken için  MOVING_WINDOW'a denk gelen değerleri kullanarak, STDEV ve MEAN hesaplamaları yapalım.
+Değişkenin mevcut Mean değerinde ANOMALY_STDEV_FACTOR * STDEV kadar artış meydana gelirse FREQUENT_MONITORING moduna geçiş yapalım. Bu modda olma durumumuzu AirQuality modülünün RunOnce metodunda takip edip mod sonlanana kadar uyumadan ölçüm ve gönderim yapalım.

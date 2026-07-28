@@ -13,6 +13,18 @@
 #include <pb_decode.h>
 #include <pb_encode.h>
 
+// On ESP32, RTC_DATA_ATTR keeps values across deep sleep resets.
+#ifdef ARCH_ESP32
+#define RTC_PERSIST RTC_DATA_ATTR
+#else
+#define RTC_PERSIST
+#endif
+
+namespace {
+constexpr uint32_t SEN55_CLEANING_MEASUREMENT_LIMIT = 288; // 10 dakika mantığı ile 2 günde bir temizleme
+RTC_PERSIST static uint32_t sen55MeasurementCount = 0;
+}
+
 SEN5XSensor::SEN5XSensor() : TelemetrySensor(meshtastic_TelemetrySensorType_SEN5X, "SEN5X") {}
 
 bool SEN5XSensor::getVersion()
@@ -518,11 +530,11 @@ bool SEN5XSensor::startCleaning()
     // This message will be always printed so the user knows the device it's not hung
     LOG_INFO("SEN5X: Started fan cleaning it will take 10 seconds...");
 
-    uint16_t started = millis();
-    while (millis() - started < 10500) {
+    uint32_t started = millis();
+    while (millis() - started < 10500U) {
         delay(500);
     }
-    LOG_INFO("SEN5X: Cleaning done!!");
+    LOG_INFO("SEN5X: Cleaning done!! elapsed=%ums", millis() - started);
 
     // Save timestamp in flash so we know when a week has passed
     uint32_t now;
@@ -579,9 +591,15 @@ bool SEN5XSensor::initDevice(TwoWire *bus, ScanI2C::FoundDevice *dev)
     // now = getValidTime(RTCQuality::RTCQualityDevice);
     now = getValidTime(RTCQuality::RTCQualityNone);
 
+    if (model == SEN55) {
+        LOG_INFO("SEN55: RTC persistent measurement counter restored: %u/%u", sen55MeasurementCount,
+                 SEN55_CLEANING_MEASUREMENT_LIMIT);
+    }
+
     // If time is not RTCQualityNone, it will return non-zero
     if (now) {
-        if (lastCleaningValid) {
+        // Temizliği artık ölçüm adedi sayarak yapıyoruz.
+        /* if (lastCleaningValid) {
 
             passed = now - lastCleaning; // in seconds
 
@@ -602,7 +620,7 @@ bool SEN5XSensor::initDevice(TwoWire *bus, ScanI2C::FoundDevice *dev)
             lastCleaningValid = true;
             LOG_INFO("SEN5X: No valid last cleaning date found, saving it now: %us", lastCleaning);
             saveState();
-        }
+        } */
 
         if (model != SEN50) {
             if (!vocValid) {
@@ -777,6 +795,22 @@ uint8_t SEN5XSensor::getMeasurements()
     }
 
     lastDataPoll = now;
+
+    if (model == SEN55) {
+        sen55MeasurementCount++;
+        LOG_INFO("SEN55: Measurement counter incremented to %u/%u", sen55MeasurementCount,
+                 SEN55_CLEANING_MEASUREMENT_LIMIT);
+
+        if (sen55MeasurementCount >= SEN55_CLEANING_MEASUREMENT_LIMIT) {
+            LOG_INFO("SEN55: Cleaning threshold reached (%u). Triggering fan cleaning...", sen55MeasurementCount);
+            if (startCleaning()) {
+                sen55MeasurementCount = 0;
+                LOG_INFO("SEN55: Fan cleaning finished; measurement counter reset to %u", sen55MeasurementCount);
+            } else {
+                LOG_WARN("SEN55: Fan cleaning failed; counter kept at %u for retry", sen55MeasurementCount);
+            }
+        }
+    }
 
     return 0;
 }

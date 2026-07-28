@@ -33,7 +33,10 @@ class AirQualityTelemetryModule : private concurrency::OSThread,
     {
         lastMeasurementPacket = nullptr;
         nodeStatusObserver.observe(&nodeStatus->onNewStatus);
-        setIntervalFromNow(10 * 1000);
+      setIntervalFromNow(10 * 1000);
+      // State machine defaults
+      monitoringMode = 0; // NORMAL_MODE
+      frequentCyclesRemaining = 0;
     }
     virtual bool wantUIFrame() override;
 #if !HAS_SCREEN
@@ -52,6 +55,8 @@ class AirQualityTelemetryModule : private concurrency::OSThread,
     @return true if it contains valid data
     */
     bool getAirQualityTelemetry(meshtastic_Telemetry *m);
+    /** Process anomaly detection using the most-recent telemetry and update state */
+    void processAnomalyDetection(const meshtastic_Telemetry &m);
     virtual meshtastic_MeshPacket *allocReply() override;
     /**
      * Send our Telemetry into the mesh
@@ -69,6 +74,10 @@ class AirQualityTelemetryModule : private concurrency::OSThread,
     uint32_t sendToPhoneIntervalMs = SECONDS_IN_MINUTE * 1000; // Send to phone every minute
     // uint32_t sendToPhoneIntervalMs = 1000; // Send to phone every minute
     uint32_t lastSentToPhone = 0;
+    // Simple persistent state for the dynamic monitoring mode
+    enum : uint8_t { NORMAL_MODE = 0, FREQUENT_MONITORING_MODE = 1 };
+    uint8_t monitoringMode;
+    int frequentCyclesRemaining;
 };
 
 #endif

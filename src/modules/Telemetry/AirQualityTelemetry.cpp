@@ -20,6 +20,109 @@
 #include "main.h"
 #include "sleep.h"
 #include <Throttle.h>
+#include <cmath>
+#include <algorithm>
+
+// ----------------- Anomaly detection / dynamic monitoring parameters -----------------
+// Tunable parameters (easy to change)
+#ifndef MOVING_WINDOW_SAMPLE_COUNT
+static constexpr size_t MOVING_WINDOW_SAMPLE_COUNT = 10; // number of samples in moving window
+#endif
+#ifndef FREQUENT_MONITORING_CYCLES
+static constexpr int FREQUENT_MONITORING_CYCLES = 10; // number of frequent cycles to stay in frequent mode
+#endif
+#ifndef FREQUENT_MONITORING_CYCLE_SEC
+static constexpr uint32_t FREQUENT_MONITORING_CYCLE_SEC = 60; // seconds between frequent measurements
+#endif
+#ifndef ANOMALY_STDEV_FACTOR
+static constexpr float ANOMALY_STDEV_FACTOR = 2.0f; // k factor for stdev
+#endif
+#ifndef MIN_ANOMALY_DELTA
+#define MIN_ANOMALY_DELTA_PM_TEMPERATURE 0.5f
+#define MIN_ANOMALY_DELTA_PM_HUMIDITY 2.0f
+#define MIN_ANOMALY_DELTA_PM10 5.0f
+#define MIN_ANOMALY_DELTA_PM_VOC_INDEX 5.0f
+#endif
+
+// Persistence macro for RTC memory where supported (ESP32)
+// On ESP32, RTC_DATA_ATTR places variables in RTC slow memory and they are retained across deep sleep.
+// On non-ESP32 targets, RTC_PERSIST expands to nothing and the variables are not preserved.
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32_S3)
+#define RTC_PERSIST RTC_DATA_ATTR
+#else
+#define RTC_PERSIST
+#endif
+
+// Ring buffers stored in RTC memory where available so deep sleep doesn't lose history
+RTC_PERSIST static float pm_temperature_buffer[MOVING_WINDOW_SAMPLE_COUNT];
+RTC_PERSIST static size_t pm_temperature_index = 0;
+RTC_PERSIST static size_t pm_temperature_count = 0;
+
+RTC_PERSIST static float pm_humidity_buffer[MOVING_WINDOW_SAMPLE_COUNT];
+RTC_PERSIST static size_t pm_humidity_index = 0;
+RTC_PERSIST static size_t pm_humidity_count = 0;
+
+RTC_PERSIST static float pm10_buffer[MOVING_WINDOW_SAMPLE_COUNT];
+RTC_PERSIST static size_t pm10_index = 0;
+RTC_PERSIST static size_t pm10_count = 0;
+
+RTC_PERSIST static float voc_buffer[MOVING_WINDOW_SAMPLE_COUNT];
+RTC_PERSIST static size_t voc_index = 0;
+RTC_PERSIST static size_t voc_count = 0;
+
+// Persistence test helper stored in RTC memory when supported
+RTC_PERSIST static bool rtcPersistenceFlag = false;
+
+// Helper: update ring buffer (FIFO/circular)
+static inline void updateRingBuffer(float *buf, size_t &index, size_t &count, float newVal)
+{
+    buf[index] = newVal;
+    index = (index + 1) % MOVING_WINDOW_SAMPLE_COUNT;
+    if (count < MOVING_WINDOW_SAMPLE_COUNT)
+        ++count;
+}
+
+// Helper: calculate mean of `count` samples in buf (assumes count>0)
+static float calculateMean(const float *buf, size_t count)
+{
+    if (count == 0)
+        return 0.0f;
+    double s = 0.0;
+    for (size_t i = 0; i < count; ++i)
+        s += buf[i];
+    return (float)(s / (double)count);
+}
+
+// Helper: sample standard deviation (n-1) denominator for sample stdev
+static float calculateStDev(const float *buf, size_t count)
+{
+    if (count <= 1)
+        return 0.0f;
+    double mean = calculateMean(buf, count);
+    double ss = 0.0;
+    for (size_t i = 0; i < count; ++i) {
+        double d = buf[i] - mean;
+        ss += d * d;
+    }
+    return (float)std::sqrt(ss / (double)(count - 1));
+}
+
+// Helper: anomaly check using z-score adaptation described in spec
+// direction: true => detect increase (new > mean+threshold), false => detect decrease (new < mean-threshold)
+static bool isAnomaly(float newVal, const float *buf, size_t count, bool directionIncrease, float minDelta)
+{
+    if (count == 0)
+        return false;
+    float mean = calculateMean(buf, count);
+    float stdev = calculateStDev(buf, count);
+    float threshold = fmaxf(ANOMALY_STDEV_FACTOR * stdev, minDelta);
+    if (directionIncrease) {
+        return newVal > (mean + threshold);
+    } else {
+        return newVal < (mean - threshold);
+    }
+}
+
 
 static constexpr uint16_t TX_HISTORY_KEY_AIR_QUALITY_TELEMETRY = 0x8004;
 
@@ -76,8 +179,15 @@ int32_t AirQualityTelemetryModule::runOnce()
 
     moduleConfig.telemetry.air_quality_enabled = 1;
     moduleConfig.telemetry.air_quality_screen_enabled = 1;
-    //moduleConfig.telemetry.air_quality_interval = 830; // Kullanıcı ayarından bağımsız olarak kodda her 15 dakikada bir ölçüm yapacak şekilde ayarladık.
-    moduleConfig.telemetry.air_quality_interval = 300; // Kullanıcı ayarından bağımsız olarak kodda her 15 dakikada bir ölçüm yapacak şekilde ayarladık.
+    moduleConfig.telemetry.air_quality_interval = 830; // Kullanıcı ayarından bağımsız olarak kodda her 15 dakikada bir ölçüm yapacak şekilde ayarladık.
+    //moduleConfig.telemetry.air_quality_interval = 300; // Kullanıcı ayarından bağımsız olarak kodda her 15 dakikada bir ölçüm yapacak şekilde ayarladık.
+
+    if (sleepOnNextExecution == false) {
+        LOG_INFO("RTC persistence flag=%s, voc_count=%u", rtcPersistenceFlag ? "true" : "false", voc_count);
+    } else {
+        LOG_INFO("Will sleep on this run. Setting RTC persistence flag to true for test.");
+        rtcPersistenceFlag = true;
+    }
 
     if (sleepOnNextExecution == true) {
         sleepOnNextExecution = false;
@@ -441,6 +551,8 @@ bool AirQualityTelemetryModule::sendTelemetry(NodeNum dest, bool phoneOnly)
     m.time = getTime();
 
     if (getAirQualityTelemetry(&m)) {
+        // Update anomaly detection buffers and state based on this measurement
+        processAnomalyDetection(m);
         if (m.variant.air_quality_metrics.has_pm_voc_idx && m.variant.air_quality_metrics.pm_voc_idx > 0) {
             bool hasAnyPM =
                 m.variant.air_quality_metrics.has_pm10_standard || m.variant.air_quality_metrics.has_pm25_standard ||
@@ -492,7 +604,38 @@ bool AirQualityTelemetryModule::sendTelemetry(NodeNum dest, bool phoneOnly)
                 LOG_INFO("Sending packet to mesh");
                 service->sendToMesh(p, RX_SRC_LOCAL, true);
 
-                if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR && config.power.is_power_saving) {
+                // If we're in dynamic frequent-monitoring mode, schedule next cycle
+                if (monitoringMode == FREQUENT_MONITORING_MODE) {
+                    // Reset sleep flag so device won't deep-sleep in the next run
+                    sleepOnNextExecution = false;
+                    // Decrement remaining cycles (unless -1 meaning infinite)
+                    if (frequentCyclesRemaining > 0) {
+                        --frequentCyclesRemaining;
+                    }
+                    LOG_INFO("In FREQUENT_MONITORING mode, cycles remaining=%d", frequentCyclesRemaining);
+                    // If cycles exhausted, go back to normal
+                    if (frequentCyclesRemaining <= 0) {
+                        monitoringMode = NORMAL_MODE;
+                        LOG_INFO("FREQUENT_MONITORING expired, returning to NORMAL_MODE");
+                        // After finishing frequent monitoring, allow normal sleep scheduling
+                        if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR && config.power.is_power_saving) {
+                            meshtastic_ClientNotification *notification = clientNotificationPool.allocZeroed();
+                            notification->level = meshtastic_LogRecord_Level_INFO;
+                            notification->time = getValidTime(RTCQualityFromNet);
+                            sprintf(notification->message, "Ending frequent monitoring, will sleep for %us interval",
+                                    Default::getConfiguredOrDefaultMs(moduleConfig.telemetry.air_quality_interval,
+                                                                    default_telemetry_broadcast_interval_secs) /
+                                        1000U);
+                            service->sendClientNotification(notification);
+                            sleepOnNextExecution = true;
+                            setIntervalFromNow(FIVE_SECONDS_MS);
+                        }
+                    } else {
+                        // Schedule next frequent measurement non-blocking
+                        setIntervalFromNow(FREQUENT_MONITORING_CYCLE_SEC * 1000U);
+                    }
+                } else if (config.device.role == meshtastic_Config_DeviceConfig_Role_SENSOR && config.power.is_power_saving) {
+                    // Default behaviour: after sending telemetry in sensor+power_saving, schedule sleep
                     meshtastic_ClientNotification *notification = clientNotificationPool.allocZeroed();
                     notification->level = meshtastic_LogRecord_Level_INFO;
                     notification->time = getValidTime(RTCQualityFromNet);
@@ -513,6 +656,92 @@ bool AirQualityTelemetryModule::sendTelemetry(NodeNum dest, bool phoneOnly)
         }
     }
     return false;
+}
+
+// Process anomaly detection using moving window buffers for selected metrics.
+// Checks are only performed when the buffer is full; buffers are updated every measurement.
+void AirQualityTelemetryModule::processAnomalyDetection(const meshtastic_Telemetry &m)
+{
+    bool detected = false;
+    // Track maximum remaining samples needed to fill buffers (for initial collection)
+    size_t maxRemainingToFill = 0;
+
+    // pm_temperature (detect increase)
+    if (m.variant.air_quality_metrics.has_pm_temperature) {
+        float newVal = m.variant.air_quality_metrics.pm_temperature;
+        if (pm_temperature_count == MOVING_WINDOW_SAMPLE_COUNT) {
+            if (isAnomaly(newVal, pm_temperature_buffer, pm_temperature_count, true, MIN_ANOMALY_DELTA_PM_TEMPERATURE)) {
+                LOG_INFO("Anomaly detected on pm_temperature: new=%.2f", newVal);
+                detected = true;
+            }
+        }
+        updateRingBuffer(pm_temperature_buffer, pm_temperature_index, pm_temperature_count, newVal);
+        maxRemainingToFill = std::max(maxRemainingToFill, MOVING_WINDOW_SAMPLE_COUNT - pm_temperature_count);
+    }
+
+    // pm_humidity (detect decrease)
+    if (m.variant.air_quality_metrics.has_pm_humidity) {
+        float newVal = m.variant.air_quality_metrics.pm_humidity;
+        if (pm_humidity_count == MOVING_WINDOW_SAMPLE_COUNT) {
+            if (isAnomaly(newVal, pm_humidity_buffer, pm_humidity_count, false, MIN_ANOMALY_DELTA_PM_HUMIDITY)) {
+                LOG_INFO("Anomaly detected on pm_humidity (decrease): new=%.2f", newVal);
+                detected = true;
+            }
+        }
+        updateRingBuffer(pm_humidity_buffer, pm_humidity_index, pm_humidity_count, newVal);
+        maxRemainingToFill = std::max(maxRemainingToFill, MOVING_WINDOW_SAMPLE_COUNT - pm_humidity_count);
+    }
+
+    // pm10 (detect increase)
+    if (m.variant.air_quality_metrics.has_pm10_standard) {
+        float newVal = (float)m.variant.air_quality_metrics.pm10_standard;
+        if (pm10_count == MOVING_WINDOW_SAMPLE_COUNT) {
+            if (isAnomaly(newVal, pm10_buffer, pm10_count, true, MIN_ANOMALY_DELTA_PM10)) {
+                LOG_INFO("Anomaly detected on pm10: new=%.2f", newVal);
+                detected = true;
+            }
+        }
+        updateRingBuffer(pm10_buffer, pm10_index, pm10_count, newVal);
+        maxRemainingToFill = std::max(maxRemainingToFill, MOVING_WINDOW_SAMPLE_COUNT - pm10_count);
+    }
+
+    // VOC index (detect increase)
+    if (m.variant.air_quality_metrics.has_pm_voc_idx) {
+        float newVal = m.variant.air_quality_metrics.pm_voc_idx;
+        if (voc_count == MOVING_WINDOW_SAMPLE_COUNT) {
+            if (isAnomaly(newVal, voc_buffer, voc_count, true, MIN_ANOMALY_DELTA_PM_VOC_INDEX)) {
+                LOG_INFO("Anomaly detected on VOC index: new=%.2f", newVal);
+                detected = true;
+            }
+        }
+        updateRingBuffer(voc_buffer, voc_index, voc_count, newVal);
+        maxRemainingToFill = std::max(maxRemainingToFill, MOVING_WINDOW_SAMPLE_COUNT - voc_count);
+    }
+
+    // If any buffer isn't full yet, ensure we stay in frequent-monitoring until filled
+    if (maxRemainingToFill > 0 && monitoringMode != FREQUENT_MONITORING_MODE) {
+        monitoringMode = FREQUENT_MONITORING_MODE;
+        frequentCyclesRemaining = (int)maxRemainingToFill; // do enough cycles to fill the largest gap
+        LOG_INFO("Beginning initial fill: staying in FREQUENT_MONITORING for %d cycles to populate buffers", frequentCyclesRemaining);
+        sleepOnNextExecution = false;
+        setIntervalFromNow(FREQUENT_MONITORING_CYCLE_SEC * 1000U);
+        return;
+    }
+
+    if (detected) {
+        // Enter or extend frequent monitoring
+        if (monitoringMode == FREQUENT_MONITORING_MODE) {
+            frequentCyclesRemaining = FREQUENT_MONITORING_CYCLES; // extend
+            LOG_INFO("Extending FREQUENT_MONITORING cycles to %d", frequentCyclesRemaining);
+        } else {
+            monitoringMode = FREQUENT_MONITORING_MODE;
+            frequentCyclesRemaining = FREQUENT_MONITORING_CYCLES;
+            LOG_INFO("Entering FREQUENT_MONITORING mode for %d cycles", frequentCyclesRemaining);
+        }
+        // Ensure we stay awake and schedule next frequent sample
+        sleepOnNextExecution = false;
+        setIntervalFromNow(FREQUENT_MONITORING_CYCLE_SEC * 1000U);
+    }
 }
 
 AdminMessageHandleResult AirQualityTelemetryModule::handleAdminMessageForModule(const meshtastic_MeshPacket &mp,
