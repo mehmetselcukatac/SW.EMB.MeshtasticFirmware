@@ -35,13 +35,19 @@ static constexpr int FREQUENT_MONITORING_CYCLES = 10; // number of frequent cycl
 static constexpr uint32_t FREQUENT_MONITORING_CYCLE_SEC = 60; // seconds between frequent measurements
 #endif
 #ifndef ANOMALY_STDEV_FACTOR
-static constexpr float ANOMALY_STDEV_FACTOR = 2.0f; // k factor for stdev
+static constexpr float ANOMALY_STDEV_FACTOR = 3.0f; // k factor for stdev
 #endif
 #ifndef MIN_ANOMALY_DELTA
 #define MIN_ANOMALY_DELTA_PM_TEMPERATURE 0.5f
 #define MIN_ANOMALY_DELTA_PM_HUMIDITY 2.0f
 #define MIN_ANOMALY_DELTA_PM10 5.0f
 #define MIN_ANOMALY_DELTA_PM_VOC_INDEX 5.0f
+#endif
+#ifndef ANOMALY_PERCENT_DELTA
+static constexpr float ANOMALY_PERCENT_DELTA_PM_TEMPERATURE = 10.0f;
+static constexpr float ANOMALY_PERCENT_DELTA_PM_HUMIDITY = 10.0f;
+static constexpr float ANOMALY_PERCENT_DELTA_PM10 = 15.0f;
+static constexpr float ANOMALY_PERCENT_DELTA_PM_VOC_INDEX = 15.0f;
 #endif
 
 // Persistence macro for RTC memory where supported (ESP32)
@@ -107,15 +113,17 @@ static float calculateStDev(const float *buf, size_t count)
     return (float)std::sqrt(ss / (double)(count - 1));
 }
 
-// Helper: anomaly check using z-score adaptation described in spec
+// Helper: anomaly check using combined stdev + absolute delta + percentage delta thresholds.
 // direction: true => detect increase (new > mean+threshold), false => detect decrease (new < mean-threshold)
-static bool isAnomaly(float newVal, const float *buf, size_t count, bool directionIncrease, float minDelta)
+static bool isAnomaly(float newVal, const float *buf, size_t count, bool directionIncrease, float minDelta,
+                      float percentDelta)
 {
     if (count == 0)
         return false;
     float mean = calculateMean(buf, count);
     float stdev = calculateStDev(buf, count);
-    float threshold = fmaxf(ANOMALY_STDEV_FACTOR * stdev, minDelta);
+    float percentThreshold = fabsf(mean) * (percentDelta / 100.0f);
+    float threshold = fmaxf(fmaxf(ANOMALY_STDEV_FACTOR * stdev, minDelta), percentThreshold);
     if (directionIncrease) {
         return newVal > (mean + threshold);
     } else {
@@ -670,7 +678,8 @@ void AirQualityTelemetryModule::processAnomalyDetection(const meshtastic_Telemet
     if (m.variant.air_quality_metrics.has_pm_temperature) {
         float newVal = m.variant.air_quality_metrics.pm_temperature;
         if (pm_temperature_count == MOVING_WINDOW_SAMPLE_COUNT) {
-            if (isAnomaly(newVal, pm_temperature_buffer, pm_temperature_count, true, MIN_ANOMALY_DELTA_PM_TEMPERATURE)) {
+            if (isAnomaly(newVal, pm_temperature_buffer, pm_temperature_count, true, MIN_ANOMALY_DELTA_PM_TEMPERATURE,
+                          ANOMALY_PERCENT_DELTA_PM_TEMPERATURE)) {
                 LOG_INFO("Anomaly detected on pm_temperature: new=%.2f", newVal);
                 detected = true;
             }
@@ -683,7 +692,8 @@ void AirQualityTelemetryModule::processAnomalyDetection(const meshtastic_Telemet
     if (m.variant.air_quality_metrics.has_pm_humidity) {
         float newVal = m.variant.air_quality_metrics.pm_humidity;
         if (pm_humidity_count == MOVING_WINDOW_SAMPLE_COUNT) {
-            if (isAnomaly(newVal, pm_humidity_buffer, pm_humidity_count, false, MIN_ANOMALY_DELTA_PM_HUMIDITY)) {
+            if (isAnomaly(newVal, pm_humidity_buffer, pm_humidity_count, false, MIN_ANOMALY_DELTA_PM_HUMIDITY,
+                          ANOMALY_PERCENT_DELTA_PM_HUMIDITY)) {
                 LOG_INFO("Anomaly detected on pm_humidity (decrease): new=%.2f", newVal);
                 detected = true;
             }
@@ -696,7 +706,7 @@ void AirQualityTelemetryModule::processAnomalyDetection(const meshtastic_Telemet
     if (m.variant.air_quality_metrics.has_pm10_standard) {
         float newVal = (float)m.variant.air_quality_metrics.pm10_standard;
         if (pm10_count == MOVING_WINDOW_SAMPLE_COUNT) {
-            if (isAnomaly(newVal, pm10_buffer, pm10_count, true, MIN_ANOMALY_DELTA_PM10)) {
+            if (isAnomaly(newVal, pm10_buffer, pm10_count, true, MIN_ANOMALY_DELTA_PM10, ANOMALY_PERCENT_DELTA_PM10)) {
                 LOG_INFO("Anomaly detected on pm10: new=%.2f", newVal);
                 detected = true;
             }
@@ -709,7 +719,8 @@ void AirQualityTelemetryModule::processAnomalyDetection(const meshtastic_Telemet
     if (m.variant.air_quality_metrics.has_pm_voc_idx) {
         float newVal = m.variant.air_quality_metrics.pm_voc_idx;
         if (voc_count == MOVING_WINDOW_SAMPLE_COUNT) {
-            if (isAnomaly(newVal, voc_buffer, voc_count, true, MIN_ANOMALY_DELTA_PM_VOC_INDEX)) {
+            if (isAnomaly(newVal, voc_buffer, voc_count, true, MIN_ANOMALY_DELTA_PM_VOC_INDEX,
+                          ANOMALY_PERCENT_DELTA_PM_VOC_INDEX)) {
                 LOG_INFO("Anomaly detected on VOC index: new=%.2f", newVal);
                 detected = true;
             }
